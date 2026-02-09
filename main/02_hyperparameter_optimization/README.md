@@ -1,6 +1,6 @@
 # Optuna Objective Function Minimization
 
-![hyperparameter_tunning](figures/05_hyperparameter_tunning.svg)
+![hyperparameter_tunning](figures/hyperparameter_tunning.svg)
 
 ## How to Run
 

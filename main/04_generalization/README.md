@@ -1,6 +1,6 @@
 # Generalization Outside the Training Domain
 
-![generalization](figures/07_generalization.svg)
+![generalization](figures/generalization.svg)
 
 
 ## 🚀 How to Run

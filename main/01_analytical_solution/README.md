@@ -1,6 +1,6 @@
 # Analytical Solution
 
-![displacement_exact](figures/04_displacement_exact.svg)
+![displacement_exact](figures/displacement_exact.svg)
 
 ## How to Run
 

@@ -1,6 +1,6 @@
 # Comparison of Accuracy and Computational Efficiency Between Methods
 
-![comparison](figures/06_accuracy_time_error_bem_pinns.svg)
+![comparison](figures/accuracy_time_error_bem_pinns.svg)
 
 ## How to Run
 
