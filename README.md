@@ -32,7 +32,7 @@ conda list -n comparative-pinns-bem-env
 
 - `02_hyperparameter_optimization/`: Results in hyperparameter optimization.
 
-![hyperparameter_tunning](main/02_hyperparameter_optimization/figures/05_hyperparameter_tunning.svg)
+![hyperparameter_tunning](main/02_hyperparameter_optimization/figures/hyperparameter_tunning.svg)
 
 - `03_comparison/`: Results in performance evaluation of BEM and PINNs.
 
