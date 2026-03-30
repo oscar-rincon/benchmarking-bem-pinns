@@ -1,13 +1,11 @@
-Reported values generated on 2026-03-25_15-49-08
+Reported values generated on 2026-03-25_11-38-56
 ====================================
 PINN (3,25) mean_relative_error: 0.074360876242136
 BEM (n=15) relative_error: 0.072494329291005
 PINN training_time_sec: 289.87279930114744
 PINN evaluation_time_sec: 0.0469920635223388
-PINN total_time_sec (training+evaluation): 289.9197913646698
 BEM assembly_solution_time_sec: 0.0889327764511108
 BEM evaluation_time_sec: 1.9717339515686036
-BEM total_time_sec (assembly+evaluation): 2.0606667280197146
 BEM assembly+solution / PINN training (ratio): 0.00030679931564989296
 BEM assembly+solution vs PINN training (orders of magnitude): 4
 PINN evaluation / BEM evaluation (ratio): 0.023832862179481405

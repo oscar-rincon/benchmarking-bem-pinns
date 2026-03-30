@@ -102,6 +102,10 @@ ratio_eval = time_pinn_eval/time_bem_eval
 order_eval = int(np.round(abs(np.log10(ratio_eval))))    # ≈ orders of magnitude
 
 
+#%% Compute total times
+time_pinn_total = time_pinn_train + time_pinn_eval
+time_bem_total = time_bem_asm + time_bem_eval
+
 #%% Collect reported values
 reported_values = {
     # Errors
@@ -111,8 +115,11 @@ reported_values = {
     # Raw times
     "PINN training_time_sec": time_pinn_train,
     "PINN evaluation_time_sec": time_pinn_eval,
+    "PINN total_time_sec (training+evaluation)": time_pinn_total,
+
     "BEM assembly_solution_time_sec": time_bem_asm,
     "BEM evaluation_time_sec": time_bem_eval,
+    "BEM total_time_sec (assembly+evaluation)": time_bem_total,
 
     # Comparisons (clean & interpretable)
     "BEM assembly+solution / PINN training (ratio)": ratio_train,
@@ -191,6 +198,8 @@ plt.scatter(
     s=pinn_marker_sizes,
     zorder=3
 )
+
+ 
 
 # --- Highlights ---
 manual_highlights = [{"hidden_layers": 3, "hidden_units": 25, "color": "#00ff0d"}]
