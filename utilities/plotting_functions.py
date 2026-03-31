@@ -291,10 +291,12 @@ def plot_bem_error(X, Y, u_inc_amp, u_scn_amp, u_amp, u_inc_phase, u_scn_phase, 
      
     c2 = axs[1].pcolormesh(X, Y, u_phase/np.abs(u_scn_phase).max(), cmap="magma", rasterized=True)
     cb2 = fig.colorbar(c2, ax=axs[1], shrink=shrink, orientation="horizontal", pad=0.07, format='%.4f')
-    cb2.set_label(r"|Error| / max($u$)", fontsize=8)
+    cb2.set_label(r"|Error| / max($u$) ($\times 10^{-2}$)", fontsize=8)
+
+    cb2.set_ticks([0,np.max(u_phase)/np.abs(u_scn_phase).max()/2, np.max(u_phase)/np.abs(u_scn_phase).max()])
+    cb2.set_ticklabels([f'{0:.1f}', f'{np.max(np.abs(u_phase)/np.abs(u_scn_phase).max())/2*100:.2f}', f'{np.max(np.abs(u_phase)/np.abs(u_scn_phase).max())*100:.2f}'], fontsize=7)
+ 
     
-    cb2.set_ticks([0, np.max(u_phase)/np.abs(u_scn_phase).max()])
-    cb2.set_ticklabels([f'{0:.1f}', f'{np.max(np.abs(u_phase)/np.abs(u_scn_phase).max()):.4f}'], fontsize=7)
     axs[1].set_title("Phase", fontsize=8, pad=6)  
     axs[1].axis("off")
     axs[1].set_aspect("equal")
@@ -484,12 +486,22 @@ def plot_bem_displacements_errors(X, Y, u_inc_amp, u_scn_amp, u_amp, u_inc_phase
     cb2.set_ticks([0, np.max(amp_ratio)])
     cb2.set_ticklabels([f'{0:.1f}', f'{np.max(amp_ratio):.4f}'], fontsize=8)
     axs[0, 1].add_patch(Rectangle(square_xy, square_size, square_size, **square_props))
+    axs[0, 1].add_patch(Rectangle(
+    (-1.5 * square_size / 2, -1.5 * square_size / 2),  # new bottom-left
+    1.5 * square_size,                                # new width
+    1.5 * square_size,                                # new height
+    fill=False,
+    edgecolor='#00a2ff',
+    linestyle='--',
+    linewidth=1.2
+    ))
     axs[0, 1].axis("off")
     axs[0, 1].set_aspect("equal")
     # Add horizontal line from x = π to x = 10π at y = 0 (or center)
     y_center = 0  # or e.g., y_center = Y.mean() or another value of interest
     line1 = Line2D([np.pi, 10*np.pi], [y_center, y_center], color="#00a2ff", linewidth=1.0, linestyle='-')
     axs[0, 1].add_line(line1)
+    
 
     # Subplot 3: Phase of the incident wave
     axs[1, 0] = fig.add_subplot(gs[1, 0])
