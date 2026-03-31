@@ -281,9 +281,9 @@ def plot_bem_error(X, Y, u_inc_amp, u_scn_amp, u_amp, u_inc_phase, u_scn_phase, 
   
     c1 = axs[0].pcolormesh(X, Y, u_amp/np.abs(u_scn_amp).max(), cmap="magma", rasterized=True)
     cb1 = fig.colorbar(c1, ax=axs[0], shrink=shrink, orientation="horizontal", pad=0.07, format='%.4f')
-    cb1.set_label(r"|Error| / max($u$)", fontsize=8)
-    cb1.set_ticks([0, np.max(np.abs(u_amp)/np.abs(u_scn_amp).max())])
-    cb1.set_ticklabels([f'{0:.1f}', f'{np.max(np.abs(u_amp)/np.abs(u_scn_amp).max()):.4f}'], fontsize=7)
+    cb1.set_label(r"|Error| / max($u$) ($\times 10^{-2}$)", fontsize=8)
+    cb1.set_ticks([0, np.max(np.abs(u_amp)/np.abs(u_scn_amp).max())/2, np.max(np.abs(u_amp)/np.abs(u_scn_amp).max())])
+    cb1.set_ticklabels([f'{0:.1f}', f'{np.max(np.abs(u_amp)/np.abs(u_scn_amp).max())/2*100:.2f}', f'{np.max(np.abs(u_amp)/np.abs(u_scn_amp).max())*100:.2f}'], fontsize=7)
     axs[0].set_title("Amplitude", fontsize=8, pad=6)  
     axs[0].axis("off")
     axs[0].set_aspect("equal")
@@ -323,9 +323,9 @@ def plot_pinns_error(X, Y, u_inc_amp, u_scn_amp, u_amp, u_inc_phase, u_scn_phase
   
     c1 = axs[0].pcolormesh(X, Y, u_amp/np.abs(u_scn_amp).max(), cmap="magma", rasterized=True)
     cb1 = fig.colorbar(c1, ax=axs[0], shrink=shrink, orientation="horizontal", pad=0.07, format='%.4f')
-    cb1.set_label(r"|Error| / max($u$)", fontsize=8)
-    cb1.set_ticks([0, np.max(np.abs(u_amp)/np.abs(u_scn_amp).max())])
-    cb1.set_ticklabels([f'{0:.1f}', f'{np.max(np.abs(u_amp)/np.abs(u_scn_amp).max()):.4f}'], fontsize=7)
+    cb1.set_label(r"|Error| / max($u$) ($\times 10^{-2}$)", fontsize=8)
+    cb1.set_ticks([0, np.max(np.abs(u_amp)/np.abs(u_scn_amp).max())/2, np.max(np.abs(u_amp)/np.abs(u_scn_amp).max())])
+    cb1.set_ticklabels([f'{0:.1f}', f'{np.max(np.abs(u_amp)/np.abs(u_scn_amp).max())/2*100:.2f}', f'{np.max(np.abs(u_amp)/np.abs(u_scn_amp).max())*100:.2f}'], fontsize=7)
     axs[0].set_title("Amplitude", fontsize=8, pad=6)  
     axs[0].axis("off")
     axs[0].set_aspect("equal")
@@ -333,10 +333,10 @@ def plot_pinns_error(X, Y, u_inc_amp, u_scn_amp, u_amp, u_inc_phase, u_scn_phase
      
     c2 = axs[1].pcolormesh(X, Y, u_phase/np.abs(u_scn_phase).max(), cmap="magma", rasterized=True)
     cb2 = fig.colorbar(c2, ax=axs[1], shrink=shrink, orientation="horizontal", pad=0.07, format='%.4f')
-    cb2.set_label(r"|Error| / max($u$)", fontsize=8)
-    
-    cb2.set_ticks([0, np.max(u_phase)/np.abs(u_scn_phase).max()])
-    cb2.set_ticklabels([f'{0:.1f}', f'{np.max(np.abs(u_phase)/np.abs(u_scn_phase).max()):.4f}'], fontsize=7)
+    cb2.set_label(r"|Error| / max($u$) ($\times 10^{-2}$)", fontsize=8)
+
+    cb2.set_ticks([0, np.max(u_phase)/np.abs(u_scn_phase).max()/2, np.max(u_phase)/np.abs(u_scn_phase).max()])
+    cb2.set_ticklabels([f'{0:.1f}', f'{np.max(np.abs(u_phase)/np.abs(u_scn_phase).max())/2*100:.2f}', f'{np.max(np.abs(u_phase)/np.abs(u_scn_phase).max())*100:.2f}'], fontsize=7)
     axs[1].set_title("Phase", fontsize=8, pad=6)  
     axs[1].axis("off")
     axs[1].set_aspect("equal")
