@@ -482,9 +482,9 @@ def plot_bem_displacements_errors(X, Y, u_inc_amp, u_scn_amp, u_amp, u_inc_phase
     amp_ratio = np.abs(u_amp) / np.abs(u_scn_amp).max()
     c2 = axs[0, 1].pcolormesh(X, Y, amp_ratio, cmap="magma", rasterized=True)
     cb2 = fig.colorbar(c2, ax=axs[0, 1], shrink=shrink, orientation="horizontal", pad=0.07, format='%.4f')
-    cb2.set_label(r"|Error| / max($u$)", fontsize=8)
-    cb2.set_ticks([0, np.max(amp_ratio)])
-    cb2.set_ticklabels([f'{0:.1f}', f'{np.max(amp_ratio):.4f}'], fontsize=8)
+    cb2.set_label(r"|Error| / max($u$) ($\times 10^{-2}$)", fontsize=8)
+    cb2.set_ticks([0, np.max(amp_ratio)/2, np.max(amp_ratio)])
+    cb2.set_ticklabels([f'{0:.1f}', f'{np.max(amp_ratio)/2*100:.2f}', f'{np.max(amp_ratio)*100:.2f}'], fontsize=8)
     axs[0, 1].add_patch(Rectangle(square_xy, square_size, square_size, **square_props))
     axs[0, 1].add_patch(Rectangle(
     (-1.5 * square_size / 2, -1.5 * square_size / 2),  # new bottom-left
@@ -492,15 +492,15 @@ def plot_bem_displacements_errors(X, Y, u_inc_amp, u_scn_amp, u_amp, u_inc_phase
     1.5 * square_size,                                # new height
     fill=False,
     edgecolor='#00a2ff',
-    linestyle='--',
-    linewidth=1.2
+    linestyle='-',
+    linewidth=1.0
     ))
     axs[0, 1].axis("off")
     axs[0, 1].set_aspect("equal")
     # Add horizontal line from x = π to x = 10π at y = 0 (or center)
     y_center = 0  # or e.g., y_center = Y.mean() or another value of interest
     line1 = Line2D([np.pi, 10*np.pi], [y_center, y_center], color="#00a2ff", linewidth=1.0, linestyle='-')
-    axs[0, 1].add_line(line1)
+    #axs[0, 1].add_line(line1)
     
 
     # Subplot 3: Phase of the incident wave
@@ -521,9 +521,9 @@ def plot_bem_displacements_errors(X, Y, u_inc_amp, u_scn_amp, u_amp, u_inc_phase
     phase_ratio = np.abs(u_phase) / np.abs(u_scn_phase).max()
     c4 = axs[1, 1].pcolormesh(X, Y, phase_ratio, cmap="magma", rasterized=True)
     cb4 = fig.colorbar(c4, ax=axs[1, 1], shrink=shrink, orientation="horizontal", pad=0.07, format='%.4f')
-    cb4.set_label(r"|Error| / max($u$)", fontsize=8)
-    cb4.set_ticks([0, np.max(phase_ratio)])
-    cb4.set_ticklabels([f'{0:.1f}', f'{np.max(phase_ratio):.4f}'], fontsize=8)
+    cb4.set_label(r"|Error| / max($u$) ($\times 10^{-2}$)", fontsize=8)
+    cb4.set_ticks([0, np.max(phase_ratio)/2, np.max(phase_ratio)])
+    cb4.set_ticklabels([f'{0:.1f}', f'{np.max(phase_ratio)/2*100:.2f}', f'{np.max(phase_ratio)*100:.2f}'], fontsize=8)
     axs[1, 1].add_patch(Rectangle(square_xy, square_size, square_size, **square_props))
     axs[1, 1].axis("off")
     axs[1, 1].set_aspect("equal")
@@ -740,17 +740,26 @@ def plot_pinns_displacements_with_errorline(X, Y, u_inc_amp, u_scn_amp, u_amp,
     ax1 = fig.add_subplot(gs[0, 1])
     c2 = ax1.pcolormesh(X, Y, np.abs(u_amp)/np.abs(u_scn_amp).max(), cmap="magma", rasterized=True)
     cb2 = fig.colorbar(c2, ax=ax1, shrink=shrink, orientation="horizontal", pad=0.07, format='%.4f')
-    cb2.set_label(r"|Error| / max($u$)", fontsize=8)
-    cb2.set_ticks([0, np.max(np.abs(u_amp)/np.abs(u_scn_amp).max())])
-    cb2.set_ticklabels([f'{0:.1f}', f'{np.max(np.abs(u_amp)/np.abs(u_scn_amp).max()):.4f}'], fontsize=8)
+    cb2.set_label(r"|Error| / max($u$) ($\times 10^{-2}$)", fontsize=8)
+    cb2.set_ticks([0, np.max(np.abs(u_amp)/np.abs(u_scn_amp).max())/2, np.max(np.abs(u_amp)/np.abs(u_scn_amp).max())])
+    cb2.set_ticklabels([f'{0:.1f}', f'{np.max(np.abs(u_amp)/np.abs(u_scn_amp).max())/2*100:.2f}', f'{np.max(np.abs(u_amp)/np.abs(u_scn_amp).max())*100:.2f}'], fontsize=8)
     ax1.add_patch(Rectangle(square_xy, square_size, square_size, **square_props))
+    ax1.add_patch(Rectangle(
+    (-1.5 * square_size / 2, -1.5 * square_size / 2),  # new bottom-left
+    1.5 * square_size,                                # new width
+    1.5 * square_size,                                # new height
+    fill=False,
+    edgecolor='#00ff0d',
+    linestyle='-',
+    linewidth=0.7
+    ))    
     ax1.axis("off")
     ax1.set_aspect("equal")
     ax1.set_xlim(-2*np.pi, 2*np.pi)
     ax1.set_ylim(-2*np.pi, 2*np.pi)
     y_center = 0  # or e.g., y_center = Y.mean() or another value of interest
     line2 = Line2D([np.pi, 2*np.pi], [y_center, y_center], color="#00ff0d", linewidth=1.0, linestyle='-')
-    ax1.add_line(line2)
+    #ax1.add_line(line2)
 
     # Subplots for phase
     ax2 = fig.add_subplot(gs[1, 0])
@@ -768,9 +777,9 @@ def plot_pinns_displacements_with_errorline(X, Y, u_inc_amp, u_scn_amp, u_amp,
     ax3 = fig.add_subplot(gs[1, 1])
     c4 = ax3.pcolormesh(X, Y, np.abs(u_phase)/np.abs(u_scn_phase).max(), cmap="magma", rasterized=True)
     cb4 = fig.colorbar(c4, ax=ax3, shrink=shrink, orientation="horizontal", pad=0.07, format='%.4f')
-    cb4.set_label(r"|Error| / max($u$)", fontsize=8)
-    cb4.set_ticks([0, np.max(np.abs(u_phase)/np.abs(u_scn_phase).max())])
-    cb4.set_ticklabels([f'{0:.1f}', f'{np.max(np.abs(u_phase)/np.abs(u_scn_phase).max()):.4f}'], fontsize=8)
+    cb4.set_label(r"|Error| / max($u$) ($\times 10^{-2}$)", fontsize=8)
+    cb4.set_ticks([0, np.max(np.abs(u_phase)/np.abs(u_scn_phase).max())/2, np.max(np.abs(u_phase)/np.abs(u_scn_phase).max())])
+    cb4.set_ticklabels([f'{0:.1f}', f'{np.max(np.abs(u_phase)/np.abs(u_scn_phase).max())/2*100:.2f}', f'{np.max(np.abs(u_phase)/np.abs(u_scn_phase).max())*100:.2f}'], fontsize=8)
     ax3.add_patch(Rectangle(square_xy, square_size, square_size, **square_props))
     ax3.axis("off")
     ax3.set_aspect("equal")

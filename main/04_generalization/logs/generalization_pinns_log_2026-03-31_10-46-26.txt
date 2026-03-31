@@ -1,2 +1,2 @@
 Script: generalization_pinns
-Execution time (s): 32.40
+Execution time (s): 32.36
