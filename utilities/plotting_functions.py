@@ -566,7 +566,7 @@ def plot_bem_displacements_errors(X, Y, u_inc_amp, u_scn_amp, u_amp, u_inc_phase
 
     ax_bar.set_xticks(x_centers)
     ax_bar.set_xticklabels(interval_labels, rotation=0, fontsize=8)
-
+    ax_bar.set_ylim(0,0.008)
     ax_bar.set_xlabel('Square ring interval', fontsize=8)
     ax_bar.set_ylabel('Average error', fontsize=8)
 
@@ -632,8 +632,8 @@ def plot_bem_displacements_errors(X, Y, u_inc_amp, u_scn_amp, u_amp, u_inc_phase
     
 
     # Add rotated labels on the left
-    fig.text(0.08, 0.79, r'BEM - Amplitude', fontsize=8, va='center', ha='center', rotation='vertical')
-    fig.text(0.08, 0.48, r'BEM - Phase', fontsize=8, va='center', ha='center', rotation='vertical')
+    fig.text(0.08, 0.80, r'BEM - Amplitude', fontsize=8, va='center', ha='center', rotation='vertical')
+    fig.text(0.08, 0.57, r'BEM - Phase', fontsize=8, va='center', ha='center', rotation='vertical')
 
     plt.tight_layout()
     plt.savefig("figures/generalization_bem.svg", dpi=300, bbox_inches='tight')
