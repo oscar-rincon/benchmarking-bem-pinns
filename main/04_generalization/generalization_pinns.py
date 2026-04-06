@@ -163,6 +163,45 @@ u_inc_line, u_scn_exact_line, u_tot_exact_line = sound_hard_circle_calc(k, r_exc
 error_line = np.abs(np.real(u_scn_exact_line) - u_sc_amp_pred)
 rel_error_line = error_line / np.max(u_inc_line + u_sc_amp_pred)
 
+
+#%% ======================== SQUARE RING ERRORS (PINNs) ========================
+
+error_field = np.abs(np.real(u_scn_exact) - u_sc_amp_pinns)
+
+n_levels = np.arange(1, 11)
+
+error_map = np.zeros_like(error_field)
+prev_bound = 0.0
+avg_errors = []
+
+for n_level in n_levels:
+    current_bound = n_level * np.pi
+
+    mask_outer = (np.abs(X) <= current_bound) & (np.abs(Y) <= current_bound)
+    mask_inner = (np.abs(X) <= prev_bound) & (np.abs(Y) <= prev_bound)
+
+    ring_mask = mask_outer & (~mask_inner)
+
+    if np.any(ring_mask):
+        values = error_field[ring_mask]
+
+        if np.any(~np.isnan(values)):
+            avg_error = np.nanmean(values)
+        else:
+            avg_error = np.nan
+
+        avg_errors.append(avg_error)
+        error_map[ring_mask] = avg_error
+
+        #print(f"PINNs n={n_level}, Avg Error: {avg_error:.2e}")
+
+    else:
+        avg_errors.append(np.nan)
+
+    prev_bound = current_bound
+
+# Optional normalization (same as BEM)
+error_map = error_map / np.max(np.abs(np.real(u_scn_exact)))
 #%% ======================== PLOTTING ========================
  
  
@@ -175,7 +214,8 @@ plot_pinns_displacements_with_errorline(
     u_sc_phase_pinns + np.real(u_inc_exact),
     np.abs(np.imag(u_scn_exact) - u_sc_phase_pinns),
     x_line,
-    rel_error_line
+    rel_error_line,
+    avg_errors
 )
 
 #%% Record runtime and save to .txt

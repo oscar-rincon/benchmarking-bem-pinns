@@ -486,21 +486,21 @@ def plot_bem_displacements_errors(X, Y, u_inc_amp, u_scn_amp, u_amp, u_inc_phase
     cb2.set_ticks([0, np.max(amp_ratio)/2, np.max(amp_ratio)])
     cb2.set_ticklabels([f'{0:.1f}', f'{np.max(amp_ratio)/2*100:.2f}', f'{np.max(amp_ratio)*100:.2f}'], fontsize=8)
     axs[0, 1].add_patch(Rectangle(square_xy, square_size, square_size, **square_props))
-    axs[0, 1].add_patch(Rectangle(
-    (-1.5 * square_size / 2, -1.5 * square_size / 2),  # new bottom-left
-    1.5 * square_size,                                # new width
-    1.5 * square_size,                                # new height
-    fill=False,
-    edgecolor='#00a2ff',
-    linestyle='-',
-    linewidth=1.0
-    ))
+    # axs[0, 1].add_patch(Rectangle(
+    # (-1.5 * square_size / 2, -1.5 * square_size / 2),  # new bottom-left
+    # 1.5 * square_size,                                # new width
+    # 1.5 * square_size,                                # new height
+    # fill=False,
+    # edgecolor='#00a2ff',
+    # linestyle='-',
+    # linewidth=1.0
+    # ))
     axs[0, 1].axis("off")
     axs[0, 1].set_aspect("equal")
     # Add horizontal line from x = π to x = 10π at y = 0 (or center)
     y_center = 0  # or e.g., y_center = Y.mean() or another value of interest
     line1 = Line2D([np.pi, 10*np.pi], [y_center, y_center], color="#00a2ff", linewidth=1.0, linestyle='-')
-    #axs[0, 1].add_line(line1)
+    axs[0, 1].add_line(line1)
     
 
     # Subplot 3: Phase of the incident wave
@@ -566,11 +566,12 @@ def plot_bem_displacements_errors(X, Y, u_inc_amp, u_scn_amp, u_amp, u_inc_phase
 
     ax_bar.set_xticks(x_centers)
     ax_bar.set_xticklabels(interval_labels, rotation=0, fontsize=8)
-    ax_bar.set_ylim(0,0.008)
+    ax_bar.set_ylim(0,0.08)
+    ax_bar.set_yticks([0, 0.04, 0.08])
     ax_bar.set_xlabel('Square ring interval', fontsize=8)
     ax_bar.set_ylabel('Average error', fontsize=8)
 
-    ax_bar.set_ylim(0, np.nanmax(avg_errors) * 1.2)
+    #ax_bar.set_ylim(0, np.nanmax(avg_errors) * 1.2)
 
     #ax_bar.grid(True, axis='y', linestyle='--', alpha=0.5)
 
@@ -737,9 +738,139 @@ def plot_bem_displacements_errors(X, Y, u_inc_amp, u_scn_amp, u_amp, u_inc_phase
 #     #plt.show()
 
 
+# def plot_pinns_displacements_with_errorline(X, Y, u_inc_amp, u_scn_amp, u_amp,
+#                                             u_inc_phase, u_scn_phase, u_phase,
+#                                             x_line, rel_error_line):
+#     """
+#     Combina gráficos 2D y gráfico de error relativo 1D usando GridSpec.
+#     """
+
+#     # Square patch properties
+#     square_size = 2 * np.pi
+#     square_xy = (-square_size / 2, -square_size / 2)
+#     square_props = dict(edgecolor="gray", facecolor="none", lw=0.8)
+#     shrink = 0.8
+#     decimales = 1e+4
+
+#     # Choose slice along y = 0
+#     y_index = np.argmin(np.abs(Y[:, 0]))  # row closest to y=0
+
+#     X_slice = X[y_index, :]
+#     amp_slice = np.abs(u_amp[y_index, :]) / np.abs(u_scn_amp).max()
+
+#     # Restrict to [pi, 10pi]
+#     mask = (X_slice >= np.pi) & (X_slice <= 10*np.pi)
+#     X_slice = X_slice[mask]
+#     amp_slice = amp_slice[mask]
+
+#     # Create figure and GridSpec layout
+#     fig = plt.figure(figsize=(3.6, 7.5))
+#     gs = gridspec.GridSpec(4, 2, height_ratios=[1, 1, 0.5, 0.7], hspace=0.5, wspace=0.05)
+
+#     # Subplots for amplitude
+#     ax0 = fig.add_subplot(gs[0, 0])
+#     c1 = ax0.pcolormesh(X, Y, u_inc_amp, cmap="RdYlBu", rasterized=True, vmin=-1.5, vmax=1.5)
+#     cb1 = fig.colorbar(c1, ax=ax0, shrink=shrink, orientation="horizontal", pad=0.07, format='%.4f')
+#     cb1.set_label(r"$u_{\rm{sct}}$", fontsize=8)
+#     cb1.set_ticks([-1.5, 1.5])
+#     cb1.set_ticklabels([f'{-1.5}', f'{1.5}'], fontsize=8)
+#     ax0.set_xlim(-2*np.pi, 2*np.pi)
+#     ax0.set_ylim(-2*np.pi, 2*np.pi)
+#     ax0.add_patch(Rectangle(square_xy, square_size, square_size, **square_props))
+#     ax0.axis("off")
+#     ax0.set_aspect("equal")
+
+
+#     ax1 = fig.add_subplot(gs[0, 1])
+#     c2 = ax1.pcolormesh(X, Y, np.abs(u_amp)/np.abs(u_scn_amp).max(), cmap="magma", rasterized=True)
+#     cb2 = fig.colorbar(c2, ax=ax1, shrink=shrink, orientation="horizontal", pad=0.07, format='%.4f')
+#     cb2.set_label(r"|Error| / max($u$) ($\times 10^{-2}$)", fontsize=8)
+#     cb2.set_ticks([0, np.max(np.abs(u_amp)/np.abs(u_scn_amp).max())/2, np.max(np.abs(u_amp)/np.abs(u_scn_amp).max())])
+#     cb2.set_ticklabels([f'{0:.1f}', f'{np.max(np.abs(u_amp)/np.abs(u_scn_amp).max())/2*100:.2f}', f'{np.max(np.abs(u_amp)/np.abs(u_scn_amp).max())*100:.2f}'], fontsize=8)
+#     ax1.add_patch(Rectangle(square_xy, square_size, square_size, **square_props))
+#     # ax1.add_patch(Rectangle(
+#     # (-1.5 * square_size / 2, -1.5 * square_size / 2),  # new bottom-left
+#     # 1.5 * square_size,                                # new width
+#     # 1.5 * square_size,                                # new height
+#     # fill=False,
+#     # edgecolor='#00ff0d',
+#     # linestyle='-',
+#     # linewidth=0.7
+#     # ))    
+#     ax1.axis("off")
+#     ax1.set_aspect("equal")
+#     ax1.set_xlim(-2*np.pi, 2*np.pi)
+#     ax1.set_ylim(-2*np.pi, 2*np.pi)
+#     y_center = 0  # or e.g., y_center = Y.mean() or another value of interest
+#     line2 = Line2D([np.pi, 2*np.pi], [y_center, y_center], color="#00ff0d", linewidth=1.0, linestyle='-')
+#     ax1.add_line(line2)
+
+#     # Subplots for phase
+#     ax2 = fig.add_subplot(gs[1, 0])
+#     c3 = ax2.pcolormesh(X, Y, u_inc_phase, cmap="twilight_shifted", rasterized=True, vmin=-(np.pi), vmax=(np.pi))
+#     cb3 = fig.colorbar(c3, ax=ax2, shrink=shrink, orientation="horizontal", pad=0.07, format='%.4f')
+#     cb3.set_label(r"$u_{\rm{sct}}$", fontsize=8)
+#     cb3.set_ticks([-(np.pi), (np.pi)])
+#     cb3.set_ticklabels([r'-$\pi$', r'$\pi$'], fontsize=8)  
+#     ax2.add_patch(Rectangle(square_xy, square_size, square_size, **square_props))
+#     ax2.axis("off")
+#     ax2.set_aspect("equal")
+#     ax2.set_xlim(-2*np.pi, 2*np.pi)
+#     ax2.set_ylim(-2*np.pi, 2*np.pi)       
+
+#     ax3 = fig.add_subplot(gs[1, 1])
+#     c4 = ax3.pcolormesh(X, Y, np.abs(u_phase)/np.abs(u_scn_phase).max(), cmap="magma", rasterized=True)
+#     cb4 = fig.colorbar(c4, ax=ax3, shrink=shrink, orientation="horizontal", pad=0.07, format='%.4f')
+#     cb4.set_label(r"|Error| / max($u$) ($\times 10^{-2}$)", fontsize=8)
+#     cb4.set_ticks([0, np.max(np.abs(u_phase)/np.abs(u_scn_phase).max())/2, np.max(np.abs(u_phase)/np.abs(u_scn_phase).max())])
+#     cb4.set_ticklabels([f'{0:.1f}', f'{np.max(np.abs(u_phase)/np.abs(u_scn_phase).max())/2*100:.2f}', f'{np.max(np.abs(u_phase)/np.abs(u_scn_phase).max())*100:.2f}'], fontsize=8)
+#     ax3.add_patch(Rectangle(square_xy, square_size, square_size, **square_props))
+#     ax3.axis("off")
+#     ax3.set_aspect("equal")
+#     ax3.set_xlim(-2*np.pi, 2*np.pi)
+#     ax3.set_ylim(-2*np.pi, 2*np.pi)
+
+#     # Subplot 5: Relative error line plot
+#     ax_err = fig.add_subplot(gs[2, :])
+#     #ax_err.axvline(x=np.pi, color="#acacac", linestyle='-', linewidth=1)
+#     #ax_err.axvline(x=2*np.pi, color="#acacac", linestyle='-', linewidth=1)  
+#     ax_err.axvspan(np.pi, 2*np.pi, color='gray', alpha=0.2)   
+#     ax_err.plot(X_slice,amp_slice, label='Relative error', color="#00ff0d")
+#     #ax_err.plot(x_line, rel_error_line, label='Relative error', color="#00ff0d")
+#     # Agregar líneas verticales en pi y 2pi
+#     ax_err.set_xlabel(r'$x$', fontsize=8)
+#     ax_err.set_ylabel(r"$|$Error$|$ / max($u$)", fontsize=8)
+#     ax_err.set_ylim(0, 0.6)
+#     #ax_err.set_ylim(0, np.max(rel_error_line) * 1.1)
+#     #ax_err.set_xlim(0, 2*np.pi)
+#     ax_err.xaxis.set_major_locator(MultipleLocator(base=np.pi))
+
+#     def format_func(value, tick_number):
+#         N = int(np.round(value / np.pi))
+#         if N == 0:
+#             return "0"
+#         elif N == 1:
+#             return r"$\pi$"
+#         elif N == -1:
+#             return r"$-\pi$"
+#         else:
+#             return fr"${N}\pi$"
+
+#     ax_err.xaxis.set_major_formatter(FuncFormatter(format_func))
+#     ax_err.set_title('PINNs - Amplitude', fontsize=8)
+
+#     # Add rotated labels
+#     fig.text(0.08, 0.79, r'PINNs - Amplitude', fontsize=8, va='center', ha='center', rotation='vertical')
+#     fig.text(0.08, 0.48, r'PINNs - Phase', fontsize=8, va='center', ha='center', rotation='vertical')
+
+#     # Save and show
+#     plt.savefig("figures/generalization_pinns.svg", dpi=300, bbox_inches='tight')
+#     #plt.show()
+
+
 def plot_pinns_displacements_with_errorline(X, Y, u_inc_amp, u_scn_amp, u_amp,
                                             u_inc_phase, u_scn_phase, u_phase,
-                                            x_line, rel_error_line):
+                                            x_line, rel_error_line, avg_errors):
     """
     Combina gráficos 2D y gráfico de error relativo 1D usando GridSpec.
     """
@@ -763,9 +894,9 @@ def plot_pinns_displacements_with_errorline(X, Y, u_inc_amp, u_scn_amp, u_amp,
     amp_slice = amp_slice[mask]
 
     # Create figure and GridSpec layout
-    fig = plt.figure(figsize=(3.6, 6.0))
-    gs = gridspec.GridSpec(3, 2, height_ratios=[1, 1, 0.7], hspace=0.5, wspace=0.05)
-
+    fig = plt.figure(figsize=(3.6, 7.5))
+    #gs = gridspec.GridSpec(3, 2, height_ratios=[1, 1, 0.7], hspace=0.5, wspace=0.05)
+    gs = gridspec.GridSpec(4, 2, height_ratios=[1, 1, 0.5, 0.7], hspace=0.5, wspace=0.05)
     # Subplots for amplitude
     ax0 = fig.add_subplot(gs[0, 0])
     c1 = ax0.pcolormesh(X, Y, u_inc_amp, cmap="RdYlBu", rasterized=True, vmin=-1.5, vmax=1.5)
@@ -787,22 +918,22 @@ def plot_pinns_displacements_with_errorline(X, Y, u_inc_amp, u_scn_amp, u_amp,
     cb2.set_ticks([0, np.max(np.abs(u_amp)/np.abs(u_scn_amp).max())/2, np.max(np.abs(u_amp)/np.abs(u_scn_amp).max())])
     cb2.set_ticklabels([f'{0:.1f}', f'{np.max(np.abs(u_amp)/np.abs(u_scn_amp).max())/2*100:.2f}', f'{np.max(np.abs(u_amp)/np.abs(u_scn_amp).max())*100:.2f}'], fontsize=8)
     ax1.add_patch(Rectangle(square_xy, square_size, square_size, **square_props))
-    ax1.add_patch(Rectangle(
-    (-1.5 * square_size / 2, -1.5 * square_size / 2),  # new bottom-left
-    1.5 * square_size,                                # new width
-    1.5 * square_size,                                # new height
-    fill=False,
-    edgecolor='#00ff0d',
-    linestyle='-',
-    linewidth=0.7
-    ))    
+    # ax1.add_patch(Rectangle(
+    # (-1.5 * square_size / 2, -1.5 * square_size / 2),  # new bottom-left
+    # 1.5 * square_size,                                # new width
+    # 1.5 * square_size,                                # new height
+    # fill=False,
+    # edgecolor='#00ff0d',
+    # linestyle='-',
+    # linewidth=0.7
+    # ))    
     ax1.axis("off")
     ax1.set_aspect("equal")
     ax1.set_xlim(-2*np.pi, 2*np.pi)
     ax1.set_ylim(-2*np.pi, 2*np.pi)
     y_center = 0  # or e.g., y_center = Y.mean() or another value of interest
     line2 = Line2D([np.pi, 2*np.pi], [y_center, y_center], color="#00ff0d", linewidth=1.0, linestyle='-')
-    #ax1.add_line(line2)
+    ax1.add_line(line2)
 
     # Subplots for phase
     ax2 = fig.add_subplot(gs[1, 0])
@@ -829,8 +960,45 @@ def plot_pinns_displacements_with_errorline(X, Y, u_inc_amp, u_scn_amp, u_amp,
     ax3.set_xlim(-2*np.pi, 2*np.pi)
     ax3.set_ylim(-2*np.pi, 2*np.pi)
 
+
+    # ======================= BAR PLOT (PINNs) =======================
+
+    ax_bar = fig.add_subplot(gs[2, :])
+
+    n_levels = np.arange(1, len(avg_errors) + 1)
+
+    # Center of each square ring
+    x_centers = (n_levels - 0.5) * np.pi
+    bar_width = 0.8 * np.pi
+
+    ax_bar.bar(
+        x_centers,
+        avg_errors,
+        width=bar_width,
+        color="#00ff0d",   # PINNs color (green)
+        alpha=0.5,
+    )
+
+    # Labels like π, 2π, ..., 10π
+    interval_labels = [
+        r"$\pi$" if n == 1 else rf"${n}\pi$"
+        for n in n_levels
+    ]
+
+    ax_bar.set_xticks(x_centers)
+    ax_bar.set_xticklabels(interval_labels, fontsize=8)
+    ax_bar.set_yticks([0,0.5,1.0])
+    ax_bar.set_xlabel('Square ring interval', fontsize=8)
+    ax_bar.set_ylabel('Average error', fontsize=8)
+
+    ax_bar.set_ylim(0, 1.0)
+
     # Subplot 5: Relative error line plot
-    ax_err = fig.add_subplot(gs[2, :])
+    #ax_err = fig.add_subplot(gs[2, :])
+    ax_err = fig.add_subplot(gs[3, :])
+
+    pos = ax_err.get_position()
+    ax_err.set_position([pos.x0, pos.y0 - 0.03, pos.width, pos.height])    
     #ax_err.axvline(x=np.pi, color="#acacac", linestyle='-', linewidth=1)
     #ax_err.axvline(x=2*np.pi, color="#acacac", linestyle='-', linewidth=1)  
     ax_err.axvspan(np.pi, 2*np.pi, color='gray', alpha=0.2)   
@@ -859,9 +1027,9 @@ def plot_pinns_displacements_with_errorline(X, Y, u_inc_amp, u_scn_amp, u_amp,
     ax_err.set_title('PINNs - Amplitude', fontsize=8)
 
     # Add rotated labels
-    fig.text(0.08, 0.79, r'PINNs - Amplitude', fontsize=8, va='center', ha='center', rotation='vertical')
-    fig.text(0.08, 0.48, r'PINNs - Phase', fontsize=8, va='center', ha='center', rotation='vertical')
+    fig.text(0.08, 0.80, r'PINNs - Amplitude', fontsize=8, va='center', ha='center', rotation='vertical')
+    fig.text(0.08, 0.57, r'PINNs - Phase', fontsize=8, va='center', ha='center', rotation='vertical')
 
     # Save and show
     plt.savefig("figures/generalization_pinns.svg", dpi=300, bbox_inches='tight')
-    #plt.show()
+    #plt.show()    

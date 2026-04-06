@@ -318,7 +318,7 @@ for n_level in n_levels:
     mask_inner = (np.abs(X_10) <= prev_bound) & (np.abs(Y_10) <= prev_bound)
 
     ring_mask = mask_outer & (~mask_inner)
-    print(f"Points in ring {n_level}: {np.sum(ring_mask)}")
+    #print(f"Points in ring {n_level}: {np.sum(ring_mask)}")
     if np.any(ring_mask):
         values = error_field[ring_mask]
 
@@ -327,38 +327,16 @@ for n_level in n_levels:
         else:
             avg_error = np.nan
         avg_errors.append(avg_error)
-        print(f"n={n_level}, Avg Error: {avg_error:.2e}")
+        #print(f"n={n_level}, Avg Error: {avg_error:.2e}")
         error_map[ring_mask] = avg_error
 
-        print(f"n={n_level}, L={current_bound:.2f}, Avg Error: {avg_error:.2e}")
+        #print(f"n={n_level}, L={current_bound:.2f}, Avg Error: {avg_error:.2e}")
 
     prev_bound = current_bound
 
 # Normalize (optional)
 error_map = error_map / np.max(np.abs(np.real(u_scn_exact_10)))
-
-#%% ======================= PLOT =======================
-
-# plt.figure(figsize=(9,5))
-
-# plt.bar(n_levels, avg_errors)
-
-# # Create interval labels
-# interval_labels = [
-#     f"[{(n-1)}π, {n}π]" if n > 1 else "[0, π]"
-#     for n in n_levels
-# ]
-
-# plt.xlabel('Square ring interval')
-# plt.ylabel('Average relative error')
-# plt.title('Average error per square ring')
-
-# plt.xticks(n_levels, interval_labels, rotation=45)
-# plt.grid(True, axis='y', linestyle='--', alpha=0.5)
-
-# plt.tight_layout()
-# plt.show()
-
+ 
 
 #%% ======================= PLOTTING =======================
  
