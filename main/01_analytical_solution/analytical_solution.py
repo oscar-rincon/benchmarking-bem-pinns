@@ -52,7 +52,7 @@ from plotting_functions import plot_exact_displacement
 #%% Parameters and grid
 r_i = np.pi/4   # Inner radius
 l_se = np.pi    # Outer semi-length
-k = 3           # Wave number
+k = 7           # Wave number
 n_grid = 501    # Number of grid points in x and y 
 
 Y, X = np.mgrid[-l_se:l_se:n_grid*1j, -l_se:l_se:n_grid*1j]

@@ -62,24 +62,28 @@ os.makedirs(figures_folder, exist_ok=True)
 #%% Create intermediate figure (BEM + PINNs errors)
 svg1 = SVG(os.path.join(figures_folder, "bem_error.svg")).scale(1.0)
 svg2 = SVG(os.path.join(figures_folder, "pinns_error.svg")).scale(1.0)
+svg3 = SVG(os.path.join(figures_folder, "bem_vs_pinns_L2_vs_k.svg")).scale(1.0)
 
 Figure(
     631,  # total width
-    191,  # height
+    480,  # height
     Panel(svg1),
-    Panel(svg2).move(230, 0)
+    Panel(svg2).move(230, 0),
+    Panel(svg3).move(0, 465)
 ).scale(1.3).save(os.path.join(figures_folder, "errors.svg"))
 
 #%% Create final combined figure
 svg1 = SVG(os.path.join(figures_folder, "rel_error_time.svg")).scale(1.0)
 svg2 = SVG(os.path.join(figures_folder, "errors.svg")).scale(1.0)
+svg3 = SVG(os.path.join(figures_folder, "bem_vs_pinns_L2_vs_k.svg")).scale(1.0)
 
 Figure(
     617,  # total width
-    348,  # height
+    480,  # height
     SVG(os.path.join(figures_folder, "comparison_base.svg")).scale(3.79),
     Panel(svg1).move(0, 0).scale(1.3),
-    Panel(svg2).move(25, 175)
+    Panel(svg2).move(25, 175),
+    Panel(svg3).move(6, 265).scale(1.3)
 ).save(os.path.join(figures_folder, "accuracy_time_error_bem_pinns.svg"))
 
 # Convert to PDF

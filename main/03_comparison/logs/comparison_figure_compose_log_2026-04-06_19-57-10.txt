@@ -1,2 +1,2 @@
 Script: comparison_figure_compose
-Execution time (s): 0.19
+Execution time (s): 0.17

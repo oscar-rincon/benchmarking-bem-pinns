@@ -81,8 +81,6 @@ u_exact = mask_displacement(R_exact, r_i, l_e, u_exact)
 
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
  
- 
-
 #%%
 # Activación personalizada
 class Sine(nn.Module):

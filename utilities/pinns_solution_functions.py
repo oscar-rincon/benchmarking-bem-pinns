@@ -334,7 +334,7 @@ def train_lbfgs(model, x_f, y_f, x_inner, y_inner, x_left, y_left,
                                   tolerance_change=1.0 * np.finfo(float).eps,
                                   line_search_fn="strong_wolfe")
 
-    # ✅ Wrap the counter in a list so it's mutable
+    # Wrap the counter in a list so it's mutable
     iter_container = [iter_train]
 
     closure_fn = partial(closure, model, optimizer, x_f, y_f, x_inner, y_inner,
@@ -391,7 +391,7 @@ def closure_with_logs(
             mean_rel_error_pinns = (rel_error_uscn_amp_pinns + rel_error_uscn_phase_pinns) / 2
 
         results.append([it, loss.item(), mean_rel_error_pinns])
-        print(f"LBFGS - Iter: {it} - Loss: {loss.item()} - Mean Rel Error: {mean_rel_error_pinns}")
+        #print(f"LBFGS - Iter: {it} - Loss: {loss.item()} - Mean Rel Error: {mean_rel_error_pinns}")
 
     return loss
 
@@ -437,7 +437,7 @@ def train_adam_with_logs(
                 mean_rel_error_pinns = (rel_error_uscn_amp_pinns + rel_error_uscn_phase_pinns) / 2
 
             results.append([iter, loss.item(), mean_rel_error_pinns])
-            print(f"Adam - Iter: {iter} - Loss: {loss.item()} - Mean Rel Error: {mean_rel_error_pinns}")
+            #print(f"Adam - Iter: {iter} - Loss: {loss.item()} - Mean Rel Error: {mean_rel_error_pinns}")
 
     # --- Save results to CSV ---
     df = pd.DataFrame(results, columns=["iteration", "loss", "mean_rel_error"])
