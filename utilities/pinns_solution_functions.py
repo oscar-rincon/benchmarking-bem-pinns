@@ -598,11 +598,39 @@ def train_adam_with_logs_adaptive(
                 )
                 mean_rel_error_pinns = (rel_error_uscn_amp_pinns + rel_error_uscn_phase_pinns) / 2
 
-            results.append([iter, loss.item(), mean_rel_error_pinns])
+            _, res_f = mse_f_adaptive(model, x_f, y_f, k)
+
+            # Boundary residuals
+            _, res_inner, res_left, res_right, res_bottom, res_top = mse_b_adaptive(
+                model,
+                x_inner, y_inner,
+                x_left, y_left,
+                x_right, y_right,
+                x_bottom, y_bottom,
+                x_top, y_top,
+                k
+            )
+
+            # Convert all residuals to 1D tensors
+            res_all = torch.cat([
+                res_f.flatten(),
+                res_inner.flatten(),
+                res_left.flatten(),
+                res_right.flatten(),
+                res_bottom.flatten(),
+                res_top.flatten()
+            ])
+
+            res_all = res_all[torch.isfinite(res_all)]
+            max_residual = torch.max(torch.abs(res_all)).item()
+
+            results.append([iter, loss.item(), mean_rel_error_pinns, max_residual])
+
+            #results.append([iter, loss.item(), mean_rel_error_pinns])
             #print(f"Adam - Iter: {iter} - Loss: {loss.item()} - Mean Rel Error: {mean_rel_error_pinns}")
 
     # --- Save results to CSV ---
-    df = pd.DataFrame(results, columns=["iteration", "loss", "mean_rel_error"])
+    df = pd.DataFrame(results, columns=["iteration", "loss", "mean_rel_error", "max_residual"])
     df.to_csv(save_csv_path, index=False)
     df.to_csv(save_csv_path_no_datetime, index=False)
 
@@ -688,7 +716,7 @@ def closure_with_logs_adaptive(
                    x_right, y_right, x_bottom, y_bottom,
                    x_top, y_top, k)
     loss = loss_b + loss_f
-    print(loss.item())
+    #print(loss.item())
     # Backpropagate the loss
     loss.backward(retain_graph=True)
 
@@ -711,7 +739,33 @@ def closure_with_logs_adaptive(
             )
             mean_rel_error_pinns = (rel_error_uscn_amp_pinns + rel_error_uscn_phase_pinns) / 2
 
-        results.append([it, loss.item(), mean_rel_error_pinns])
+        _, res_f = mse_f_adaptive(model, x_f, y_f, k)
+
+        # Boundary residuals
+        _, res_inner, res_left, res_right, res_bottom, res_top = mse_b_adaptive(
+            model,
+            x_inner, y_inner,
+            x_left, y_left,
+            x_right, y_right,
+            x_bottom, y_bottom,
+            x_top, y_top,
+            k
+        )
+
+        # Convert all residuals to 1D tensors
+        res_all = torch.cat([
+            res_f.flatten(),
+            res_inner.flatten(),
+            res_left.flatten(),
+            res_right.flatten(),
+            res_bottom.flatten(),
+            res_top.flatten()
+        ])
+
+        res_all = res_all[torch.isfinite(res_all)]
+        max_residual = torch.max(torch.abs(res_all)).item()
+
+        results.append([it, loss.item(), mean_rel_error_pinns,max_residual])
         #print(f"LBFGS - Iter: {it} - Loss: {loss.item()} - Mean Rel Error: {mean_rel_error_pinns}")
 
     return loss
@@ -748,7 +802,7 @@ def train_lbfgs_with_logs_adaptive(
     iter_container = [iter_start]
 
     closure_fn = partial(
-        closure_with_logs,
+        closure_with_logs_adaptive,
         model, optimizer,
         x_f, y_f,
         x_inner, y_inner,
@@ -764,12 +818,6 @@ def train_lbfgs_with_logs_adaptive(
 
     optimizer.step(closure_fn)
 
-    # --- Save results to CSV ---
-    df = pd.DataFrame(results, columns=["iteration", "loss", "mean_rel_error"])
-    df.to_csv(save_csv_path, index=False)
-    df.to_csv(save_csv_path_no_datetime, index=False)
-
- 
     _, res_f = mse_f_adaptive(model, x_f, y_f, k)
 
     # Boundary residuals
@@ -783,7 +831,26 @@ def train_lbfgs_with_logs_adaptive(
         k
     )
 
- 
+    # Convert all residuals to 1D tensors
+    res_all = torch.cat([
+        res_f.flatten(),
+        res_inner.flatten(),
+        res_left.flatten(),
+        res_right.flatten(),
+        res_bottom.flatten(),
+        res_top.flatten()
+    ])
+
+    # res_all = res_all[torch.isfinite(res_all)]
+    # max_residual = torch.max(torch.abs(res_all)).item()
+
+    # results.append([iteration, loss, mean_rel_error])
+
+    # --- Save results to CSV ---
+    df = pd.DataFrame(results, columns=["iteration", "loss", "mean_rel_error", "max_residual"])
+    df.to_csv(save_csv_path, index=False)
+    df.to_csv(save_csv_path_no_datetime, index=False)
+
     return iter_container[0], res_f, res_inner, res_left, res_right, res_bottom, res_top  
 
 def generate_points(n_Omega_P, side_length, r_i, n_Gamma_I, n_boundary_e):
@@ -1364,39 +1431,128 @@ def to_training_format(
         x_top, y_top
     )
 
-def compute_rad_probability(res, k=1.0, c=0.0):
-    """
-    Compute RAD probability from residuals.
+# def compute_rad_probability(res, k=1.0, c=0.0):
+#     """
+#     Compute RAD probability from residuals.
 
-    Parameters:
-    res : np.array
-        Residual values (positive)
-    k : float
-        Exponent (controls sharpness)
-    c : float
-        Offset (prevents zero probability)
+#     Parameters:
+#     res : np.array
+#         Residual values (positive)
+#     k : float
+#         Exponent (controls sharpness)
+#     c : float
+#         Offset (prevents zero probability)
 
-    Returns:
-    prob : np.array
-        Probability distribution
-    """
+#     Returns:
+#     prob : np.array
+#         Probability distribution
+#     """
 
+#     res = res.flatten()
+
+#     # Avoid numerical issues
+#     res = np.abs(res) + 1e-12
+
+#     # RAD weights
+#     weights = res**k
+#     weights = weights / weights.mean() + c
+
+#     # Normalize to probability
+#     prob = weights / weights.sum()
+
+#     return prob
+def compute_rad_probability(res, k=1.0, c=1.0):
+    # Ensure tensor
+    if not torch.is_tensor(res):
+        res = torch.tensor(res, dtype=torch.float32)
+ 
+    # Flatten
     res = res.flatten()
 
     # Avoid numerical issues
-    res = np.abs(res) + 1e-12
+    res = torch.abs(res)  
 
     # RAD weights
-    weights = res**k
-    weights = weights / weights.mean() + c
+    w = res**k
 
-    # Normalize to probability
-    prob = weights / weights.sum()
+    # Normalize by mean (IMPORTANT difference)
+    w_mean = torch.mean(w)  
+    w_norm = w / w_mean
+
+    # Add exploration term
+    w_rad = w_norm + c
+
+    # Final probability
+    prob = w_rad / (torch.sum(w_rad))
 
     return prob
 
 
-def plot_sampling_points(
+# def plot_sampling_and_residual(
+#     x_f_adaptive, y_f_adaptive, res_f,   # <-- add residuals
+#     x_f, y_f,
+#     x_inner, y_inner,
+#     x_left, y_left,
+#     x_right, y_right,
+#     x_bottom, y_bottom,
+#     x_top, y_top,
+#     iter
+# ):
+#     fig, axes = plt.subplots(1, 2, figsize=(5.5, 2.5))
+
+#     # ======================================================
+#     # LEFT: Residual map
+#     # ======================================================
+#     sc = axes[0].scatter(
+#         x_f_adaptive.detach().cpu().numpy(),
+#         y_f_adaptive.detach().cpu().numpy(),
+#         c=res_f.detach().cpu().numpy(),
+#         s=3,
+#         cmap='magma', rasterized=True
+#     )
+
+#     axes[0].set_aspect('equal')
+#     axes[0].set_title("Residual", fontsize=8)
+#     axes[0].axis('off')
+
+#     # Colorbar (small)
+#     cbar = plt.colorbar(sc, ax=axes[0], fraction=0.046, pad=0.04, shrink=0.8)
+#     cbar.ax.tick_params(labelsize=6)
+
+#     # ======================================================
+#     # RIGHT: Sampling points (your original plot)
+#     # ======================================================
+#     axes[1].scatter(
+#         x_f.detach().cpu().numpy(),
+#         y_f.detach().cpu().numpy(),
+#         s=2, alpha=0.4, rasterized=True
+#     )
+
+#     axes[1].scatter(x_inner.detach().cpu(), y_inner.detach().cpu(), s=2)
+#     axes[1].scatter(x_left.detach().cpu(),  y_left.detach().cpu(),  s=2)
+#     axes[1].scatter(x_right.detach().cpu(), y_right.detach().cpu(), s=2)
+#     axes[1].scatter(x_bottom.detach().cpu(),y_bottom.detach().cpu(),s=2)
+#     axes[1].scatter(x_top.detach().cpu(),   y_top.detach().cpu(),   s=2)
+
+#     axes[1].set_aspect('equal')
+#     axes[1].set_title(f"Sampling - {iter}", fontsize=8)
+#     axes[1].axis('off')
+
+#     # ======================================================
+#     # Layout & save
+#     # ======================================================
+#     plt.tight_layout()
+#     plt.savefig(
+#         f"figures/residual_sampling_{iter}.pdf",
+#         dpi=300,
+#         bbox_inches='tight',
+#         pad_inches=0.01
+#     )
+#     plt.close()
+
+
+def plot_sampling_and_residual(
+    x_f_adaptive, y_f_adaptive, res_f,   # <-- add residuals
     x_f, y_f,
     x_inner, y_inner,
     x_left, y_left,
@@ -1405,26 +1561,159 @@ def plot_sampling_points(
     x_top, y_top,
     iter
 ):
-    plt.figure(figsize=(2.5, 2.5))
 
-    # Domain points
-    plt.scatter(
+    fig, axes = plt.subplots(1, 2, figsize=(5.5, 2.5))
+
+    # ======================================================
+    # LEFT: Residual map
+    # ======================================================
+    # sc = axes[0].scatter(
+    #     x_f_adaptive.detach().cpu().numpy(),
+    #     y_f_adaptive.detach().cpu().numpy(),
+    #     c=res_f.detach().cpu().numpy(),
+    #     s=3,
+    #     cmap='viridis', rasterized=True
+    # )
+
+    # axes[0].set_aspect('equal')
+    axes[0].set_title("Sampling distribution", fontsize=8)
+    # axes[0].axis('off')
+
+
+
+    # vmin1 = np.nanmin(res_f.detach().cpu().numpy())
+    # vmax1 = np.nanmax(res_f.detach().cpu().numpy())
+    # vmid1 = 0.5 * (vmin1 + vmax1)
+
+    # cbar1 = plt.colorbar(
+    #     sc,
+    #     ax=axes[0],
+    #     orientation='horizontal',
+    #     fraction=0.05,
+    #     pad=0.12,
+    #     shrink=0.8
+    # )
+
+    # cbar1.set_ticks([vmin1, vmid1, vmax1])
+    # cbar1.ax.tick_params(labelsize=6)
+
+    axes[0].scatter(
         x_f.detach().cpu().numpy(),
         y_f.detach().cpu().numpy(),
-        s=5, alpha=0.4, label="Domain"
+        s=2, alpha=0.4, rasterized=True,
+        color="#AFAFAF"
     )
 
-    # Boundaries
-    plt.scatter(x_inner.detach().cpu(), y_inner.detach().cpu(), s=12, label="Inner")
-    plt.scatter(x_left.detach().cpu(),  y_left.detach().cpu(),  s=12, label="Left")
-    plt.scatter(x_right.detach().cpu(), y_right.detach().cpu(), s=12, label="Right")
-    plt.scatter(x_bottom.detach().cpu(),y_bottom.detach().cpu(),s=12, label="Bottom")
-    plt.scatter(x_top.detach().cpu(),   y_top.detach().cpu(),   s=12, label="Top")
+    axes[0].scatter(x_inner.detach().cpu(), y_inner.detach().cpu(), s=1, color='#1f77b4')
+    axes[0].scatter(x_left.detach().cpu(),  y_left.detach().cpu(),  s=1, color='#006e06')
+    axes[0].scatter(x_right.detach().cpu(), y_right.detach().cpu(), s=1, color="#006e06")
+    axes[0].scatter(x_bottom.detach().cpu(),y_bottom.detach().cpu(),s=1, color='#006e06')
+    axes[0].scatter(x_top.detach().cpu(),   y_top.detach().cpu(),   s=1, color='#006e06')
 
-    plt.gca().set_aspect('equal')
-    plt.title(f"RAD - {iter}", fontsize=8)
-    #plt.legend(fontsize=8)
-    plt.axis('off')
+    axes[0].set_aspect('equal')
+    #axes[0].set_title(f"Sampling - {iter}", fontsize=8)
+    axes[0].axis('off')
+
+    # ======================================================
+    # RIGHT: Sampling points (your original plot)
+    # ======================================================
+    # axes[1].scatter(
+    #     x_f.detach().cpu().numpy(),
+    #     y_f.detach().cpu().numpy(),
+    #     s=2, alpha=0.4, rasterized=True
+    # )
+
+    # axes[1].scatter(x_inner.detach().cpu(), y_inner.detach().cpu(), s=2)
+    # axes[1].scatter(x_left.detach().cpu(),  y_left.detach().cpu(),  s=2)
+    # axes[1].scatter(x_right.detach().cpu(), y_right.detach().cpu(), s=2)
+    # axes[1].scatter(x_bottom.detach().cpu(),y_bottom.detach().cpu(),s=2)
+    # axes[1].scatter(x_top.detach().cpu(),   y_top.detach().cpu(),   s=2)
+
+    # axes[1].set_aspect('equal')
+    # axes[1].set_title(f"Sampling - {iter}", fontsize=8)
+    # axes[1].axis('off')
+
+    # Convert all regions to numpy
+    x_all = torch.cat([
+        x_f, x_inner, x_left, x_right, x_bottom, x_top
+    ]).detach().cpu().numpy().flatten()
+
+    y_all = torch.cat([
+        y_f, y_inner, y_left, y_right, y_bottom, y_top
+    ]).detach().cpu().numpy().flatten()
+
+    # Convert to numpy
+    # x = x_f.detach().cpu().numpy().flatten()
+    # y = y_f.detach().cpu().numpy().flatten()
+
+    # Stack for KDE
+    # xy = np.vstack([x, y])
+
+    # # KDE
+    # kde = gaussian_kde(xy)
+
+    # # Grid
+    # xmin, xmax = x.min(), x.max()
+    # ymin, ymax = y.min(), y.max()
+
+    xy = np.vstack([x_all, y_all])
+    kde = gaussian_kde(xy)
+
+    xmin, xmax = x_all.min(), x_all.max()
+    ymin, ymax = y_all.min(), y_all.max()
+
+    xx, yy = np.meshgrid(
+        np.linspace(xmin, xmax, 200),
+        np.linspace(ymin, ymax, 200)
+    )
+
+    grid_coords = np.vstack([xx.ravel(), yy.ravel()])
+    zz = kde(grid_coords).reshape(xx.shape)
+
+    r_i = np.pi / 4
+    # Distance from center
+    rr = np.sqrt(xx**2 + yy**2)
+
+    # Mask inside the circle
+    zz_masked = np.where(rr < r_i, np.nan, zz)
+
+
+    # Plot
+    im = axes[1].imshow(
+        zz_masked,
+        extent=[xmin, xmax, ymin, ymax],
+        origin='lower',
+        aspect='equal',
+        cmap='magma'
+    )
+
+    axes[1].axis('off')
+
+    # Colorbar
+    cbar2 = plt.colorbar(
+        im,
+        ax=axes[1],
+        orientation='horizontal',
+        fraction=0.05,
+        pad=0.12,
+        shrink=0.6
+    )
+    cbar2.ax.tick_params(labelsize=6)
+    # Set exactly 3 ticks
+    vmin = np.nanmin(zz_masked)
+    vmax = np.nanmax(zz_masked)
+    vmid = 0.5 * (vmin + vmax)    
+    cbar2.set_ticks([vmin, vmid, vmax])
+    cbar2.ax.tick_params(labelsize=6)
+    cbar2.set_label("Sampling Density", fontsize=6)
+    # ======================================================
+    # Layout & save
+    # ======================================================
     plt.tight_layout()
-    plt.savefig(f"figures/sampling_points_{iter}.pdf", dpi=300, bbox_inches='tight', pad_inches=0.01)
-    #plt.show()
+    plt.savefig(
+        f"figures/residual_sampling_{iter+1}.pdf",
+        dpi=300,
+        bbox_inches='tight',
+        pad_inches=0.01
+    )
+    plt.close()
