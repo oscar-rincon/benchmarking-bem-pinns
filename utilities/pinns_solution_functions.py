@@ -156,7 +156,7 @@ def mse_f(model, x_f, y_f, k):
     """
     # Calculate f(x, y) from the neural network
     f_u_real, f_u_imag = f(model, x_f, y_f, k)
-    
+
     # Calculate the mean squared error for the real and imaginary parts
     error_f_real = torch.mean(f_u_real**2)
     error_f_imag = torch.mean(f_u_imag**2)
@@ -165,6 +165,34 @@ def mse_f(model, x_f, y_f, k):
     mse = error_f_real + error_f_imag
       
     return mse
+
+def mse_f_adaptive(model, x_f, y_f, k):
+    """
+    Calculate the mean squared error (MSE) for the Helmholtz equation components.
+
+    Parameters:
+    model (torch.nn.Module): The neural network model.
+    x_f (torch.Tensor): Tensor of x-coordinates of the input domain.
+    y_f (torch.Tensor): Tensor of y-coordinates of the input domain.
+    k (float): Wave number.
+
+    Returns:
+    torch.Tensor: Mean squared error for the Helmholtz equation components.
+    """
+    # Calculate f(x, y) from the neural network
+    f_u_real, f_u_imag = f(model, x_f, y_f, k)
+
+    # Local residual (per point)
+    res_f = f_u_real**2 + f_u_imag**2   
+
+    # Calculate the mean squared error for the real and imaginary parts
+    error_f_real = torch.mean(f_u_real**2)
+    error_f_imag = torch.mean(f_u_imag**2)
+    
+    # Sum the errors to obtain the total MSE
+    mse = error_f_real + error_f_imag
+      
+    return mse, res_f
 
 def mse_b(model, x_inner, y_inner, x_left, y_left, x_right, y_right, x_bottom, y_bottom, x_top, y_top, k):
     """
@@ -234,6 +262,86 @@ def mse_b(model, x_inner, y_inner, x_left, y_left, x_right, y_right, x_bottom, y
     mse = mse_inner + mse_left + mse_right + mse_bottom + mse_top
     return mse
 
+def mse_b_adaptive(
+    model,
+    x_inner, y_inner,
+    x_left, y_left,
+    x_right, y_right,
+    x_bottom, y_bottom,
+    x_top, y_top,
+    k
+):
+    """
+    Returns:
+        mse_total         : scalar boundary loss
+        residuals_all     : concatenated local residuals (Nb_total, 1)
+    """
+
+    def calculate_boundary_residual(x, y, model, k, boundary_type):
+        domain = torch.stack((x, y), axis=1)
+        u = model(domain)
+        u_real = u[:, 0]
+        u_imag = u[:, 1]
+
+        if boundary_type == 'inner':
+            theta = torch.atan2(y, x)
+
+            du_real_dx = derivative(u_real, x, order=1)
+            du_real_dy = derivative(u_real, y, order=1)
+            du_imag_dx = derivative(u_imag, x, order=1)
+            du_imag_dy = derivative(u_imag, y, order=1)
+
+            du_real_dn = -(torch.cos(theta) * du_real_dx + torch.sin(theta) * du_real_dy)
+            du_imag_dn = -(torch.cos(theta) * du_imag_dx + torch.sin(theta) * du_imag_dy)
+
+            ikx = 1j * k * x
+            exp_ikx = 1j * k * torch.exp(ikx) * (torch.cos(theta))
+
+            error_real = du_real_dn - torch.real(exp_ikx)
+            error_imag = du_imag_dn - torch.imag(exp_ikx)
+
+        elif boundary_type in ['left', 'right']:
+            du_real_dx = derivative(u_real, x, order=1)
+            du_imag_dx = derivative(u_imag, x, order=1)
+
+            sign = -1 if boundary_type == 'left' else 1
+            du_real_dn = sign * du_real_dx
+            du_imag_dn = sign * du_imag_dx
+
+            error_real = du_real_dn - (-k * u_imag)
+            error_imag = du_imag_dn - (k * u_real)
+
+        elif boundary_type in ['bottom', 'top']:
+            du_real_dy = derivative(u_real, y, order=1)
+            du_imag_dy = derivative(u_imag, y, order=1)
+
+            sign = -1 if boundary_type == 'bottom' else 1
+            du_real_dn = sign * du_real_dy
+            du_imag_dn = sign * du_imag_dy
+
+            error_real = du_real_dn - (-k * u_imag)
+            error_imag = du_imag_dn - (k * u_real)
+
+        # Local residual per point
+        residual = error_real**2 + error_imag**2   # (N,)
+
+        # MSE
+        mse = torch.mean(residual)
+
+        return mse, torch.abs(residual)
+
+    # --- Compute per boundary ---
+    mse_inner, res_inner = calculate_boundary_residual(x_inner, y_inner, model, k, 'inner')
+    mse_left, res_left = calculate_boundary_residual(x_left, y_left, model, k, 'left')
+    mse_right, res_right = calculate_boundary_residual(x_right, y_right, model, k, 'right')
+    mse_bottom, res_bottom = calculate_boundary_residual(x_bottom, y_bottom, model, k, 'bottom')
+    mse_top, res_top = calculate_boundary_residual(x_top, y_top, model, k, 'top')
+
+    #  Total loss
+    mse_total = mse_inner + mse_left + mse_right + mse_bottom + mse_top
+
+    return mse_total, torch.abs(res_inner), torch.abs(res_left), torch.abs(res_right), torch.abs(res_bottom), torch.abs(res_top)
+
 def train_adam(model, x_f, y_f, x_inner, y_inner, x_left, y_left, x_right, y_right, x_bottom, y_bottom, x_top, y_top, k, iter, results, lr_, num_iter=500):
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr_)
@@ -252,6 +360,9 @@ def train_adam(model, x_f, y_f, x_inner, y_inner, x_left, y_left, x_right, y_rig
             #torch.save(model.state_dict(), f'models_iters/scattering_{iter}.pt')
         #    print(f"Adam - Iter: {iter} - Loss: {loss.item()}")
     return iter        
+
+
+ 
 
 def train_adam_logs(
     model, x_f, y_f, x_inner, y_inner, x_left, y_left,
@@ -295,6 +406,8 @@ def train_adam_logs(
     df = pd.DataFrame(results, columns=["iteration", "loss", "mean_rel_error"])
     df.to_csv(save_csv_path, index=False)
     df.to_csv(save_csv_path_no_datetime, index=False)
+
+    
 
 def closure(model, optimizer, x_f, y_f, x_inner, y_inner, x_left, y_left, 
             x_right, y_right, x_bottom, y_bottom, x_top, y_top, k, iter_container, results):
@@ -446,7 +559,54 @@ def train_adam_with_logs(
 
     return iter
 
+def train_adam_with_logs_adaptive(
+    model, x_f, y_f, x_inner, y_inner,
+    x_left, y_left, x_right, y_right,
+    x_bottom, y_bottom, x_top, y_top,
+    k, iter, results, lr_,
+    num_iter=500,
+    save_csv_path=None,
+    save_csv_path_no_datetime=None,
+    l_e=None, r_i=None, n_grid=None, X=None, Y=None, R_exact=None,
+    u_scn_exact=None, u_exact=None
+):
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr_)
 
+    for i in range(1, num_iter + 1):
+        optimizer.zero_grad()
+        loss_f, res_f = mse_f_adaptive(model, x_f, y_f, k)
+        loss_b, res_inner, res_left, res_right, res_bottom, res_top = mse_b_adaptive(model, x_inner, y_inner, x_left, y_left,
+                       x_right, y_right, x_bottom, y_bottom,
+                       x_top, y_top, k)
+        loss = loss_f + loss_b
+        loss.backward(retain_graph=True)
+        optimizer.step()
+        iter += 1
+
+        # --- Log only every 100 iterations ---
+        if iter % 100 == 0 or iter == 1:  # also log the first iteration
+            mean_rel_error_pinns = None
+
+            if all(v is not None for v in [l_e, r_i, n_grid, X, Y, R_exact, u_scn_exact, u_exact]):
+                # Compute relative error ONLY when logging
+                u_sc_amp_pinns, u_sc_phase_pinns, u_amp_pinns, u_phase_pinns, diff_uscn_amp_pinns, diff_u_scn_phase_pinns = process_displacement_pinns(
+                    model, l_e, r_i, k, n_grid, X, Y, R_exact, u_scn_exact
+                )
+                rel_error_uscn_amp_pinns, rel_error_uscn_phase_pinns, *_ = calculate_relative_errors(
+                    u_scn_exact, u_exact, diff_uscn_amp_pinns,
+                    diff_u_scn_phase_pinns, R_exact, r_i
+                )
+                mean_rel_error_pinns = (rel_error_uscn_amp_pinns + rel_error_uscn_phase_pinns) / 2
+
+            results.append([iter, loss.item(), mean_rel_error_pinns])
+            #print(f"Adam - Iter: {iter} - Loss: {loss.item()} - Mean Rel Error: {mean_rel_error_pinns}")
+
+    # --- Save results to CSV ---
+    df = pd.DataFrame(results, columns=["iteration", "loss", "mean_rel_error"])
+    df.to_csv(save_csv_path, index=False)
+    df.to_csv(save_csv_path_no_datetime, index=False)
+
+    return iter
 
 def train_lbfgs_with_logs(
     model, x_f, y_f,
@@ -500,8 +660,131 @@ def train_lbfgs_with_logs(
     df = pd.DataFrame(results, columns=["iteration", "loss", "mean_rel_error"])
     df.to_csv(save_csv_path, index=False)
     df.to_csv(save_csv_path_no_datetime, index=False)
+    print(df)
 
-    return iter_container[0]  # final iteration count
+
+    return iter_container[0] 
+
+def closure_with_logs_adaptive(
+    model, optimizer,
+    x_f, y_f,
+    x_inner, y_inner,
+    x_left, y_left,
+    x_right, y_right,
+    x_bottom, y_bottom,
+    x_top, y_top,
+    k,
+    iter_container,
+    results,
+    l_e=None, r_i=None, n_grid=None, X=None, Y=None, R_exact=None,
+    u_scn_exact=None, u_exact=None
+):
+    # Reset gradients
+    optimizer.zero_grad()
+
+    # Calculate the loss
+    loss_f = mse_f(model, x_f, y_f, k)
+    loss_b = mse_b(model, x_inner, y_inner, x_left, y_left,
+                   x_right, y_right, x_bottom, y_bottom,
+                   x_top, y_top, k)
+    loss = loss_b + loss_f
+    print(loss.item())
+    # Backpropagate the loss
+    loss.backward(retain_graph=True)
+
+    # Update iteration counter
+    iter_container[0] += 1
+    it = iter_container[0]
+
+    # --- Log only every 100 iterations ---
+    if it % 100 == 0 or it == 1:  # also log the first iteration
+        mean_rel_error_pinns = None
+
+        if all(v is not None for v in [l_e, r_i, n_grid, X, Y, R_exact, u_scn_exact, u_exact]):
+            # Compute relative error ONLY when logging
+            u_sc_amp_pinns, u_sc_phase_pinns, u_amp_pinns, u_phase_pinns, diff_uscn_amp_pinns, diff_u_scn_phase_pinns = process_displacement_pinns(
+                model, l_e, r_i, k, n_grid, X, Y, R_exact, u_scn_exact
+            )
+            rel_error_uscn_amp_pinns, rel_error_uscn_phase_pinns, *_ = calculate_relative_errors(
+                u_scn_exact, u_exact, diff_uscn_amp_pinns,
+                diff_u_scn_phase_pinns, R_exact, r_i
+            )
+            mean_rel_error_pinns = (rel_error_uscn_amp_pinns + rel_error_uscn_phase_pinns) / 2
+
+        results.append([it, loss.item(), mean_rel_error_pinns])
+        #print(f"LBFGS - Iter: {it} - Loss: {loss.item()} - Mean Rel Error: {mean_rel_error_pinns}")
+
+    return loss
+
+def train_lbfgs_with_logs_adaptive(
+    model, x_f, y_f,
+    x_inner, y_inner,
+    x_left, y_left,
+    x_right, y_right,
+    x_bottom, y_bottom,
+    x_top, y_top,
+    k,
+    iter_start,
+    results,
+    lbfgs_lr,
+    num_iter=500,
+    save_csv_path=None,
+    save_csv_path_no_datetime=None,
+    l_e=None, r_i=None, n_grid=None, X=None, Y=None, R_exact=None,
+    u_scn_exact=None, u_exact=None
+):
+    optimizer = torch.optim.LBFGS(
+        model.parameters(),
+        lr=lbfgs_lr,
+        max_iter=num_iter,
+        max_eval=num_iter,
+        tolerance_grad=1e-7,
+        history_size=100,
+        tolerance_change=1.0 * np.finfo(float).eps,
+        line_search_fn="strong_wolfe"
+    )
+
+    # Use a mutable container so closure can update iteration
+    iter_container = [iter_start]
+
+    closure_fn = partial(
+        closure_with_logs,
+        model, optimizer,
+        x_f, y_f,
+        x_inner, y_inner,
+        x_left, y_left,
+        x_right, y_right,
+        x_bottom, y_bottom,
+        x_top, y_top,
+        k,
+        iter_container,
+        results,
+        l_e, r_i, n_grid, X, Y, R_exact, u_scn_exact, u_exact
+    )
+
+    optimizer.step(closure_fn)
+
+    # --- Save results to CSV ---
+    df = pd.DataFrame(results, columns=["iteration", "loss", "mean_rel_error"])
+    df.to_csv(save_csv_path, index=False)
+    df.to_csv(save_csv_path_no_datetime, index=False)
+
+ 
+    _, res_f = mse_f_adaptive(model, x_f, y_f, k)
+
+    # Boundary residuals
+    _, res_inner, res_left, res_right, res_bottom, res_top = mse_b_adaptive(
+        model,
+        x_inner, y_inner,
+        x_left, y_left,
+        x_right, y_right,
+        x_bottom, y_bottom,
+        x_top, y_top,
+        k
+    )
+
+ 
+    return iter_container[0], res_f, res_inner, res_left, res_right, res_bottom, res_top  
 
 def generate_points(n_Omega_P, side_length, r_i, n_Gamma_I, n_boundary_e):
     """
@@ -983,3 +1266,165 @@ def evaluate_pinn_accuracy(n_layers, n_neurons, model_dir='models', k=3.0, r_i=n
 
     return computation_time, relative_error
 
+
+def prepare_points_and_residuals(
+    x_f, y_f, res_f,
+    x_inner, y_inner, res_inner,
+    x_left, y_left, res_left,
+    x_right, y_right, res_right,
+    x_bottom, y_bottom, res_bottom,
+    x_top, y_top, res_top
+):
+    def to_numpy(x):
+        return x.detach().cpu().numpy().reshape(-1)
+
+    # Convert everything
+    X_f = np.stack([to_numpy(x_f), to_numpy(y_f)], axis=1)
+    X_inner = np.stack([to_numpy(x_inner), to_numpy(y_inner)], axis=1)
+    X_left = np.stack([to_numpy(x_left), to_numpy(y_left)], axis=1)
+    X_right = np.stack([to_numpy(x_right), to_numpy(y_right)], axis=1)
+    X_bottom = np.stack([to_numpy(x_bottom), to_numpy(y_bottom)], axis=1)
+    X_top = np.stack([to_numpy(x_top), to_numpy(y_top)], axis=1)
+
+    # Residuals
+    res_f = to_numpy(res_f)
+    res_inner = to_numpy(res_inner)
+    res_left = to_numpy(res_left)
+    res_right = to_numpy(res_right)
+    res_bottom = to_numpy(res_bottom)
+    res_top = to_numpy(res_top)
+
+    # Combine
+    X_all = np.vstack([X_f, X_inner, X_left, X_right, X_bottom, X_top])
+    res_all = np.concatenate([res_f, res_inner, res_left, res_right, res_bottom, res_top])
+
+    return X_all, res_all
+
+def split_adaptive_points(
+    X_selected,
+    n_Omega_P,
+    n_Gamma_I,
+    n_Gamma_E
+):
+    idx = 0
+
+    def take(n):
+        nonlocal idx
+        out = X_selected[idx:idx+n]
+        idx += n
+        return out
+
+    X_f_new     = take(n_Omega_P)
+    X_inner_new = take(n_Gamma_I)
+    X_left_new  = take(n_Gamma_E)
+    X_right_new = take(n_Gamma_E)
+    X_bottom_new= take(n_Gamma_E)
+    X_top_new   = take(n_Gamma_E)
+
+    return (
+        X_f_new,
+        X_inner_new,
+        X_left_new,
+        X_right_new,
+        X_bottom_new,
+        X_top_new
+    )
+
+def to_training_format(
+    X_f_new, X_inner_new,
+    X_left_new, X_right_new,
+    X_bottom_new, X_top_new,
+    device
+):
+    def split_xy(X):
+
+        if isinstance(X, np.ndarray):
+            X = torch.from_numpy(X)
+
+        X = X.float().to(device)
+
+        return (
+            X[:, 0].clone().detach().requires_grad_(True),
+            X[:, 1].clone().detach().requires_grad_(True)
+        )
+
+    x_f, y_f         = split_xy(X_f_new)
+    x_inner, y_inner = split_xy(X_inner_new)
+    x_left, y_left   = split_xy(X_left_new)
+    x_right, y_right = split_xy(X_right_new)
+    x_bottom, y_bottom = split_xy(X_bottom_new)
+    x_top, y_top     = split_xy(X_top_new)
+
+    return (
+        x_f, y_f,
+        x_inner, y_inner,
+        x_left, y_left,
+        x_right, y_right,
+        x_bottom, y_bottom,
+        x_top, y_top
+    )
+
+def compute_rad_probability(res, k=1.0, c=0.0):
+    """
+    Compute RAD probability from residuals.
+
+    Parameters:
+    res : np.array
+        Residual values (positive)
+    k : float
+        Exponent (controls sharpness)
+    c : float
+        Offset (prevents zero probability)
+
+    Returns:
+    prob : np.array
+        Probability distribution
+    """
+
+    res = res.flatten()
+
+    # Avoid numerical issues
+    res = np.abs(res) + 1e-12
+
+    # RAD weights
+    weights = res**k
+    weights = weights / weights.mean() + c
+
+    # Normalize to probability
+    prob = weights / weights.sum()
+
+    return prob
+
+
+def plot_sampling_points(
+    x_f, y_f,
+    x_inner, y_inner,
+    x_left, y_left,
+    x_right, y_right,
+    x_bottom, y_bottom,
+    x_top, y_top,
+    iter
+):
+    plt.figure(figsize=(2.5, 2.5))
+
+    # Domain points
+    plt.scatter(
+        x_f.detach().cpu().numpy(),
+        y_f.detach().cpu().numpy(),
+        s=5, alpha=0.4, label="Domain"
+    )
+
+    # Boundaries
+    plt.scatter(x_inner.detach().cpu(), y_inner.detach().cpu(), s=12, label="Inner")
+    plt.scatter(x_left.detach().cpu(),  y_left.detach().cpu(),  s=12, label="Left")
+    plt.scatter(x_right.detach().cpu(), y_right.detach().cpu(), s=12, label="Right")
+    plt.scatter(x_bottom.detach().cpu(),y_bottom.detach().cpu(),s=12, label="Bottom")
+    plt.scatter(x_top.detach().cpu(),   y_top.detach().cpu(),   s=12, label="Top")
+
+    plt.gca().set_aspect('equal')
+    plt.title(f"RAD - {iter}", fontsize=8)
+    #plt.legend(fontsize=8)
+    plt.axis('off')
+    plt.tight_layout()
+    plt.savefig(f"figures/sampling_points_{iter}.pdf", dpi=300, bbox_inches='tight', pad_inches=0.01)
+    #plt.show()
