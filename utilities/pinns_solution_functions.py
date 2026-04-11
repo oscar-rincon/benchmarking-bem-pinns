@@ -10,6 +10,8 @@ from matplotlib.patches import Rectangle
 from functools import partial   
 from analytical_solution_functions import sound_hard_circle_calc, mask_displacement, calculate_relative_errors
 from matplotlib.gridspec import GridSpec
+#gaussian_kde
+from scipy.stats import gaussian_kde
 
 def set_seed(seed=42):
     # Python's built-in random module
@@ -1677,14 +1679,14 @@ def plot_sampling_and_residual(
     # Mask inside the circle
     zz_masked = np.where(rr < r_i, np.nan, zz)
 
-
     # Plot
     im = axes[1].imshow(
         zz_masked,
         extent=[xmin, xmax, ymin, ymax],
         origin='lower',
         aspect='equal',
-        cmap='magma'
+        cmap='magma',
+        vmin=0, vmax=np.nanmax(zz_masked)
     )
 
     axes[1].axis('off')
@@ -1700,10 +1702,10 @@ def plot_sampling_and_residual(
     )
     cbar2.ax.tick_params(labelsize=6)
     # Set exactly 3 ticks
-    vmin = np.nanmin(zz_masked)
+    #vmin = np.nanmin(zz_masked)
     vmax = np.nanmax(zz_masked)
-    vmid = 0.5 * (vmin + vmax)    
-    cbar2.set_ticks([vmin, vmid, vmax])
+    #vmid = 0.5 * (vmin + vmax)    
+    cbar2.set_ticks([0, vmax])
     cbar2.ax.tick_params(labelsize=6)
     cbar2.set_label("Sampling Density", fontsize=6)
     # ======================================================
