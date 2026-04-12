@@ -66,7 +66,7 @@ svg3 = SVG(os.path.join(figures_folder, "bem_vs_pinns_L2_vs_k.svg")).scale(1.0)
 
 Figure(
     631,  # total width
-    480,  # height
+    485,  # height
     Panel(svg1),
     Panel(svg2).move(230, 0),
     Panel(svg3).move(0, 465)
@@ -79,7 +79,7 @@ svg3 = SVG(os.path.join(figures_folder, "bem_vs_pinns_L2_vs_k.svg")).scale(1.0)
 
 Figure(
     617,  # total width
-    480,  # height
+    485,  # height
     SVG(os.path.join(figures_folder, "comparison_base.svg")).scale(3.79),
     Panel(svg1).move(0, 0).scale(1.3),
     Panel(svg2).move(25, 175),
