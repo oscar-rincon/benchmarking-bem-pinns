@@ -1719,3 +1719,6 @@ def plot_sampling_and_residual(
         pad_inches=0.01
     )
     plt.close()
+
+
+    
