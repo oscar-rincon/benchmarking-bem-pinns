@@ -1,0 +1,3 @@
+Error results generated on 2026-04-14_17-57-29
+=============================
+Relative L2 error: 7.093940e+00

@@ -458,8 +458,8 @@ def plot_bem_displacements_errors(X, Y, u_inc_amp, u_scn_amp, u_amp, u_inc_phase
     square_xy = (-square_size / 2, -square_size / 2)
     square_props = dict(edgecolor="gray", facecolor="none", lw=0.8)
 
-    fig = plt.figure(figsize=(3.6, 7.5))
-    gs = gridspec.GridSpec(4, 2, height_ratios=[1, 1, 0.5, 0.7], hspace=0.5, wspace=0.05)
+    fig = plt.figure(figsize=(3.6, 7.2))
+    gs = gridspec.GridSpec(4, 2, height_ratios=[1, 1, 0.5, 0.5], hspace=0.5, wspace=0.05)
     # Update GridSpec to 4 rows: [amp, amp, phase, rel_error+zoom]
     # fig = plt.figure(figsize=(3.4, 6.5))
     # gs = gridspec.GridSpec(4, 2, height_ratios=[1, 1, 1, 1.2], hspace=0.4, wspace=0.05)
@@ -511,8 +511,6 @@ def plot_bem_displacements_errors(X, Y, u_inc_amp, u_scn_amp, u_amp, u_inc_phase
     cb3.set_ticks([-np.pi, np.pi])
     cb3.set_ticklabels([r'-$\pi$', r'$\pi$'], fontsize=8)
     axs[1, 0].add_patch(Rectangle(square_xy, square_size, square_size, **square_props))
-
-
     axs[1, 0].axis("off")
     axs[1, 0].set_aspect("equal")
 
@@ -542,6 +540,8 @@ def plot_bem_displacements_errors(X, Y, u_inc_amp, u_scn_amp, u_amp, u_inc_phase
 # ======================= BAR PLOT (NEW BOTTOM PANEL) =======================
 
     ax_bar = fig.add_subplot(gs[2, :])
+    pos = ax_bar.get_position()
+    ax_bar.set_position([pos.x0, pos.y0 - 0.01, pos.width, pos.height])
 
     n_levels = np.arange(1, len(avg_errors) + 1)
 
@@ -566,19 +566,52 @@ def plot_bem_displacements_errors(X, Y, u_inc_amp, u_scn_amp, u_amp, u_inc_phase
 
     ax_bar.set_xticks(x_centers)
     ax_bar.set_xticklabels(interval_labels, rotation=0, fontsize=8)
-    ax_bar.set_ylim(0,0.08)
-    ax_bar.set_yticks([0, 0.04, 0.08])
+    ax_bar.set_ylim(0,1.0)
+    #ax_bar.set_yticks([0, 0.04, 0.08])
     ax_bar.set_xlabel('Square ring interval', fontsize=8)
-    ax_bar.set_ylabel('Average error', fontsize=8)
+    ax_bar.set_ylabel('Average', fontsize=8)
+    ax_bar.set_title('BEM - Amplitude', fontsize=8)
 
     #ax_bar.set_ylim(0, np.nanmax(avg_errors) * 1.2)
 
     #ax_bar.grid(True, axis='y', linestyle='--', alpha=0.5)
 
+    # ======================= BARPLOT ZOOM =======================
+
+    zm_bar = ax_bar.inset_axes([0.0, -1.4, 1.0, 0.6])
+
+    # Replot bars inside zoom
+    zm_bar.bar(
+        x_centers,
+        avg_errors,
+        width=bar_width,
+        color="#00a2ff",
+        alpha=0.5,
+        zorder=2
+    )
+
+    # Same zoom limits as line plot
+    zm_bar.set_xlim(0, 10*np.pi)
+    zm_bar.set_ylim(0, 0.1)
+    zm_bar.xaxis.set_major_locator(MultipleLocator(base=np.pi))
+    zm_bar.xaxis.set_major_formatter(FuncFormatter(format_func))
+
+    zm_bar.set_yticks([0, 0.05, 0.10])
+    zm_bar.set_yticklabels([0, 0.05, 0.10], fontsize=6)
+    zm_bar.tick_params(axis="x", labelsize=6)
+    zm_bar.set_xticks(x_centers)
+    zm_bar.set_xticklabels(interval_labels, rotation=0, fontsize=6)
+    
+    zm_bar.set_xlabel(r'$x$', fontsize=6)
+    zm_bar.set_ylabel('Average', fontsize=6)
+
+    # Connect inset
+    mark_inset(ax_bar, zm_bar, loc1=1, loc2=2, fc="none", ec="0.5", lw=1)
+
     # Subplot 5: Relative error along y = 0 (full width)
     ax_err = fig.add_subplot(gs[3, :])
     pos = ax_err.get_position()
-    ax_err.set_position([pos.x0, pos.y0 - 0.03, pos.width, pos.height])
+    ax_err.set_position([pos.x0, pos.y0 - 0.16, pos.width, pos.height])
 
     ax_err.plot(x_line, rel_error_line, label='Relative error', color="#00a2ff", linewidth=1.0)
     #ax_err.axvline(x=np.pi, color="#acacac", linestyle='-', linewidth=1)
@@ -588,14 +621,14 @@ def plot_bem_displacements_errors(X, Y, u_inc_amp, u_scn_amp, u_amp, u_inc_phase
 
     ax_err.set_xlabel(r'$x$')
     ax_err.set_ylabel(r"$|$Error$|$ / max($u$)")
-    ax_err.set_ylim(0, 0.6)
+    ax_err.set_ylim(0, 1.0)
     # zm = ax_err.inset_axes([0.2, 0.5, 0.75, 0.45])
     # zm.plot(x_line, rel_error_line, color="#00a2ff")
     # zm.set_yticks([0, 0.03])
     # zm.set_yticklabels([0, 0.03], fontsize=7)
 
     # Zoomed inset
-    zm = ax_err.inset_axes([0.0, -1.1, 1.0, 0.60])
+    zm = ax_err.inset_axes([0.0, -1.4, 1.0, 0.60])
     zm.plot(x_line, rel_error_line, color="#00a2ff", linewidth=1.0,zorder=2)
 
     zm.set_xlim(np.pi, 10*np.pi)
@@ -609,8 +642,8 @@ def plot_bem_displacements_errors(X, Y, u_inc_amp, u_scn_amp, u_amp, u_inc_phase
     zm.xaxis.set_major_locator(MultipleLocator(2*np.pi))
     zm.xaxis.set_major_locator(MultipleLocator(base=np.pi))
     zm.xaxis.set_major_formatter(FuncFormatter(format_func))
-    zm.set_yticks([0, 0.04])
-    zm.set_yticklabels([0, 0.04], fontsize=6)
+    zm.set_yticks([0.0, 0.02, 0.04])
+    zm.set_yticklabels([0, 0.02, 0.04], fontsize=6)
     zm.tick_params(axis="x", labelsize=6)
 
     # Connect inset to main plot
@@ -894,9 +927,9 @@ def plot_pinns_displacements_with_errorline(X, Y, u_inc_amp, u_scn_amp, u_amp,
     amp_slice = amp_slice[mask]
 
     # Create figure and GridSpec layout
-    fig = plt.figure(figsize=(3.6, 7.5))
+    fig = plt.figure(figsize=(3.5, 7.5))
     #gs = gridspec.GridSpec(3, 2, height_ratios=[1, 1, 0.7], hspace=0.5, wspace=0.05)
-    gs = gridspec.GridSpec(4, 2, height_ratios=[1, 1, 0.5, 0.7], hspace=0.5, wspace=0.05)
+    gs = gridspec.GridSpec(4, 2, height_ratios=[0.88, 0.88, 0.5, 0.5], hspace=0.5, wspace=0.05)
     # Subplots for amplitude
     ax0 = fig.add_subplot(gs[0, 0])
     c1 = ax0.pcolormesh(X, Y, u_inc_amp, cmap="RdYlBu", rasterized=True, vmin=-1.5, vmax=1.5)
@@ -992,6 +1025,7 @@ def plot_pinns_displacements_with_errorline(X, Y, u_inc_amp, u_scn_amp, u_amp,
     ax_bar.set_ylabel('Average error', fontsize=8)
 
     ax_bar.set_ylim(0, 1.0)
+    ax_bar.set_title('PINNs - Amplitude', fontsize=8)
 
     # Subplot 5: Relative error line plot
     #ax_err = fig.add_subplot(gs[2, :])
