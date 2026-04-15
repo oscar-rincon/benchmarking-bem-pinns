@@ -204,7 +204,6 @@ for n_level in n_levels:
 error_map = error_map / np.max(np.abs(np.real(u_scn_exact)))
 #%% ======================== PLOTTING ========================
  
- 
 plot_pinns_displacements_with_errorline(
     X, Y,
     u_sc_amp_pinns,
