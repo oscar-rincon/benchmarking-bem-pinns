@@ -9,7 +9,8 @@ import matplotlib.image as mpimg
 import pandas as pd
 
 # Paths
-current_dir = os.getcwd()
+#current_dir = os.getcwd()
+current_dir = os.path.dirname(os.path.abspath(__file__))
 utilities_dir = os.path.join(current_dir, '../../utilities')
 sys.path.insert(0, utilities_dir)
 
