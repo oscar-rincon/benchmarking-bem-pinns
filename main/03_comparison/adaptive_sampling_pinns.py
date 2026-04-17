@@ -1,3 +1,43 @@
+"""
+Script: adaptive_sampling_pinns.py
+
+Description:
+    This script trains a Physics-Informed Neural Network (PINN) 
+    to solve the scattering problem for a sound-hard circular obstacle 
+    using a Residual-based Adaptive Distribution (RAD) sampling strategy.
+
+    The workflow starts with an initial training phase using Adam, followed 
+    by iterative L-BFGS optimization. After each refinement step, new training 
+    points are adaptively resampled based on the residual distribution, 
+    concentrating points in regions with higher error.
+
+    The script also generates visualization of the adaptive sampling process 
+    and compares the performance against uniform sampling.
+
+Inputs:
+    - Problem parameters: wave number k, geometry (inner radius, domain size), 
+      and grid resolution.
+    - Sampling parameters: number of interior and boundary points 
+      (initial, adaptive, and visualization sets).
+    - Neural network architecture: number of layers, neurons, and activation function.
+    - Training parameters: learning rates and number of iterations for Adam and L-BFGS.
+    - Exact analytical displacement fields for error evaluation.
+    - Precomputed training logs and error arrays for comparison plots.
+
+Outputs:
+    - Adaptive sampling visualization (SVG) showing residual distribution 
+      and sampling density, saved in ./figures/
+    - Serialized data (PT) containing sampled points and residuals for debugging, 
+      saved in ./data/
+    - CSV logs of adaptive training iterations, saved in ./data/
+    - Final comparison plots (PDF and SVG) of:
+        * Relative error vs sampling factor
+        * Loss vs iterations
+        * Maximum residual vs iterations
+      saved in ./figures/
+"""
+
+
 from datetime import datetime
 import sys, os
 import numpy as np

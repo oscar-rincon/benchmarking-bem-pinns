@@ -1,5 +1,41 @@
 
 
+"""
+Script: bem_comparison.py
+
+Description:
+    This script evaluates the accuracy and computational performance of the 
+    Boundary Element Method (BEM) and, optionally, Physics-Informed Neural 
+    Networks (PINNs) for the scattering problem with a circular obstacle.
+
+    For BEM, the script computes the relative error and execution times 
+    (assembly, solution, and evaluation) for different discretization levels. 
+    Each configuration is repeated multiple times to obtain averaged metrics 
+    and standard deviations for robust performance assessment.
+
+    The PINN evaluation (optional section) measures accuracy and inference time 
+    across different network architectures using precomputed training results.
+
+    The script also records the total execution time and stores it in a log file 
+    for reproducibility.
+
+Inputs:
+    - BEM parameters: number of boundary elements (n values).
+    - Timing configuration: number of repetitions for averaging execution times.
+    - PINN architecture parameters (optional): number of layers and neurons per layer.
+    - Precomputed PINN training logs (CSV) for accuracy and training time extraction.
+
+Outputs:
+    - CSV file with BEM accuracy and timing statistics (mean and standard deviation), 
+      saved in ./data/ (with and without timestamp).
+    - CSV file with PINN accuracy and timing statistics (if enabled), 
+      saved in ./data/.
+    - Log file (TXT) with script name and total execution time, 
+      saved in ./logs/ (with and without timestamp).
+"""
+
+#%%
+
 from datetime import datetime
 import sys
 import os
@@ -30,8 +66,6 @@ from matplotlib.patches import ConnectionPatch
 from bem_solution_functions import Circle_n
 
 #%%
-
- 
 
 # --- Load data ---
 bem_df = pd.read_csv("data/bem_accuracy_vs_n.csv")
@@ -69,9 +103,6 @@ fig, axes = plt.subplots(2, 2, figsize=(6.2, 2.3), sharey='row')
 axes[0, 0].plot(n_bem, e_bem, color="#00a2ff", zorder=1, alpha=0.5)
 axes[0, 0].scatter(n_bem, e_bem, s=15, color="#00a2ff", edgecolor="#00578a", zorder=2, alpha=0.5)
 axes[0, 0].set_title("BEM", size=8)
-#axes[0, 0].set_xlabel("Integration points")
-#axes[0, 0].set_ylim(-0.05, 0.9)
-#axes[0, 0].set_yticks([0, 0.4, 0.8])
 axes[0, 0].set_ylabel("Relative error")
 
 # =========================
@@ -80,7 +111,6 @@ axes[0, 0].set_ylabel("Relative error")
 axes[0, 1].plot(model_id, e_pinn, color="#00ff0d", zorder=1, alpha=0.5)
 axes[0, 1].scatter(model_id, e_pinn, s=15, color="#00ff0d", edgecolor="#009908", zorder=2, alpha=0.5)
 axes[0, 1].set_title("PINN", size=8)
-#axes[0, 1].set_xlabel("Model index")
 axes[0, 1].set_ylabel("Relative error")
 axes[0, 1].set_ylim(-0.05, 1.5)
 axes[0, 1].set_yticks([0, 0.8, 1.6])
@@ -121,7 +151,6 @@ ax_zoom.set_ylabel("Total time (s)", fontsize=8)
 # Small ticks
 ax_zoom.tick_params(labelsize=7)
 
- 
 # =========================
 # BOTTOM RIGHT: PINN - Time
 # =========================
@@ -140,7 +169,6 @@ plt.show()
 
 #%%
 
- 
 # Valores de n
 n_values = [5, 10, 15]
 

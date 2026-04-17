@@ -1,7 +1,7 @@
 
 # ============================================================
 """
-Script: pinns_training.py
+Script: trainning_optimized_pinns.py
 
 Description:
     This script trains a Physics-Informed Neural Network (PINN) 

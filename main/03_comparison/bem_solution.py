@@ -1,7 +1,7 @@
 
 # ============================================================
 """
-Script: comparison_bem_pinns.py
+Script: bem_solution.py
 
 Description:
     This script evaluates and compares the accuracy and runtime 
