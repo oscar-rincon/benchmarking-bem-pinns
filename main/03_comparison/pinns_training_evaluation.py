@@ -1,6 +1,7 @@
-# ============================================================
+
+
 """
-Script: pinns_training.py
+Script: pinns_training_evaluation.py
 
 Description:
     This script performs a systematic hyperparameter study of 
@@ -23,7 +24,7 @@ Outputs (all filenames include timestamp):
       training times
     - Log file (TXT) with total runtime saved in ./logs/
 """
-# ============================================================
+
 
 #%%
 import datetime

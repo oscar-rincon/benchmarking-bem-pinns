@@ -1,6 +1,41 @@
 
 
- 
+"""
+Script: bem_wavenumber_study.py
+
+Description:
+    This script analyzes the performance of the Boundary Element Method (BEM) 
+    for the scattering problem with a circular obstacle across a range of 
+    wavenumbers.
+
+    For each wavenumber, the boundary discretization is adaptively adjusted 
+    to maintain a fixed number of elements per wavelength. The script computes 
+    the numerical solution using BEM, compares it with the analytical solution, 
+    and evaluates the relative L2 error.
+
+    It also generates spatial plots of the numerical solution, exact solution, 
+    and error distribution for each wavenumber. Finally, the script compares 
+    the BEM accuracy against precomputed PINN results as a function of the 
+    scaled wavenumber.
+
+Inputs:
+    - Problem parameters: domain size, obstacle radius, and grid resolution.
+    - Wavenumber range (k values) for the parametric study.
+    - Adaptive discretization rule for BEM (elements per wavelength).
+    - Analytical solution for error computation.
+    - Precomputed PINN L2 errors for comparison.
+
+Outputs:
+    - PNG figures (one per wavenumber) showing:
+        * BEM numerical solution
+        * Analytical solution
+        * Absolute error map
+      saved in ./figs_k/
+    - NumPy file (NPY) with BEM L2 errors vs wavenumber, saved in ./data/
+    - Comparison plot (SVG) of relative L2 error vs scaled wavenumber 
+      (BEM vs PINNs), saved in ./figures/
+"""
+
 from datetime import datetime
 import sys
 import os

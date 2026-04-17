@@ -146,20 +146,48 @@ relative_error = np.linalg.norm(
 ) / np.linalg.norm(u_scn_exact_masked.real, 2)
 
 # Ensure folder exists
-# error_folder = os.path.join(os.path.dirname(__file__), "data")
-# os.makedirs(error_folder, exist_ok=True)
+error_folder = os.path.join(os.path.dirname(__file__), "data")
+os.makedirs(error_folder, exist_ok=True)
 
-# error_file = os.path.join(error_folder, f"bem_relative_error_{date_str}.txt")
-# error_file_no_date = os.path.join(error_folder, "bem_relative_error.txt")
+error_file = os.path.join(error_folder, f"bem_relative_error_{date_str}.txt")
+error_file_no_date = os.path.join(error_folder, "bem_relative_error.txt")
 
-# with open(error_file, "w") as f:
-#     f.write(f"Relative L2 error: {relative_error:.6e}\n")
+with open(error_file, "w") as f:
+    f.write(f"Relative L2 error: {relative_error:.6e}\n")
 
-# with open(error_file_no_date, "w") as f:
-#     f.write(f"Relative L2 error: {relative_error:.6e}\n")
+with open(error_file_no_date, "w") as f:
+    f.write(f"Relative L2 error: {relative_error:.6e}\n")
 
-# print(f"Relative L2 error: {relative_error:.2e}")
+print(f"Relative L2 error: {relative_error:.2e}")
 
+#%% ======================= RADIAL LINE PROFILE =======================
+# # Línea radial desde el centro hacia +x, con y=0
+# x_line = np.linspace(np.pi, 10 * np.pi, 500)
+# y_line = np.zeros_like(x_line)
+# points_line = np.vstack((x_line, y_line)).T
+
+# # Evaluar campo BEM en puntos de la línea
+# interiorIncidentPhi_line = np.zeros(points_line.shape[0], dtype=complex)
+# phi_bem_line = solveExterior(
+#     k, v, phi,
+#     interiorIncidentPhi_line,
+#     points_line,
+#     aVertex, aElement,
+#     'exterior'
+# )
+
+# # Solución exacta
+# X_line, Y_line = x_line, y_line
+# u_inc_line, u_scn_exact_line, u_tot_exact_line = sound_hard_circle_calc(
+#     k, r_exclude,
+#     X_line, Y_line
+# )
+
+# # Error relativo
+# error_line = np.abs(np.real(u_scn_exact_line) - np.real(phi_bem_line))
+# rel_error_line = error_line / np.max(np.real(u_scn_exact_line))
+
+#%% ======================= RADIAL LINE PROFILE =======================
 # Línea radial desde el centro hacia +x, con y=0
 x_line = np.linspace(np.pi, 10 * np.pi, 500)
 y_line = np.zeros_like(x_line)
@@ -308,7 +336,10 @@ for n_level in n_levels:
 
 # Normalize (optional)
 error_map = error_map / np.max(np.abs(np.real(u_scn_exact_10)))
+ 
 
+#%% ======================= PLOTTING =======================
+ 
 plot_bem_displacements_errors(
     X, Y,
     u_scn_amp,
@@ -320,4 +351,29 @@ plot_bem_displacements_errors(
     x_line,
     rel_error_line,
     avg_errors
-) 
+)
+
+
+#%% Record runtime and save to .txt
+end_time = time.time()
+elapsed_time = end_time - start_time
+
+# Build log text
+log_text = f"Script: {script_name}\nExecution time (s): {elapsed_time:.2f}\n"
+
+# Define log filenames inside the logs folder
+log_filename_with_date = os.path.join(output_folder, f"{script_name}_log_{date_str}.txt")
+log_filename_no_date   = os.path.join(output_folder, f"{script_name}_log.txt")
+
+# Write log file with date
+with open(log_filename_with_date, "w") as f:
+    f.write(log_text)
+
+# Write log file without date
+with open(log_filename_no_date, "w") as f:
+    f.write(log_text)
+
+print(f"Log saved to: {log_filename_with_date}")
+print(f"Log also saved to: {log_filename_no_date}")
+
+# %%

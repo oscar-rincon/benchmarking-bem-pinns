@@ -1,5 +1,39 @@
 
+"""
+Script: pinns_sampling_factor_study.py
 
+Description:
+    This script evaluates the impact of the number of training points on the 
+    performance of a Physics-Informed Neural Network (PINN) for the scattering 
+    problem with a sound-hard circular obstacle.
+
+    The study is conducted by scaling the number of collocation and boundary 
+    points using predefined sampling factors. For each configuration, a PINN 
+    is trained using Adam optimization followed by L-BFGS refinement.
+
+    After training, the predicted solution is compared against the analytical 
+    solution to compute the relative L2 error. The script also generates spatial 
+    visualizations of the predicted solution, exact solution, and error map 
+    for each sampling level.
+
+Inputs:
+    - Problem parameters: wave number k, domain size, obstacle radius, 
+      and grid resolution.
+    - Base sampling configuration: number of interior and boundary points.
+    - Sampling factors to scale the number of training points.
+    - Neural network architecture: number of layers, neurons, and activation function.
+    - Training parameters: learning rates and number of iterations for Adam and L-BFGS.
+    - Analytical solution for error evaluation.
+
+Outputs:
+    - PNG figures (one per sampling factor) showing:
+        * PINN predicted solution
+        * Analytical solution
+        * Absolute error map
+      saved in ./figs_sampling/
+    - NumPy file (NPY) with relative L2 errors vs sampling factor, 
+      saved in ./figs_sampling/
+"""
  
 from datetime import datetime
 import sys, os
@@ -215,6 +249,3 @@ for factor in sampling_factors:
 # Save L2 errors
 l2_errors = np.array(l2_errors)
 np.save(os.path.join(output_dir, "l2_errors_sampling.npy"), l2_errors)
-
- 
-

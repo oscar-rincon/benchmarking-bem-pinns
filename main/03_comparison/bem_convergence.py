@@ -1,7 +1,7 @@
 
 
 """
-Script: bem_comparison.py
+Script: bem_convergence.py
 
 Description:
     This script evaluates the accuracy and computational performance of the 

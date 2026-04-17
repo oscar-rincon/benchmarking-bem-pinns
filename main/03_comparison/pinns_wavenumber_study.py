@@ -1,10 +1,40 @@
 
+
 """
-Script: pinns_L2_vs_k.py
+Script: pinns_wavenumber_study.py
 
 Description:
-    Train PINNs for different wavenumbers k and compute
-    relative L2 error vs k.
+    This script analyzes the performance of a Physics-Informed Neural Network (PINN) 
+    for the scattering problem with a sound-hard circular obstacle across a range 
+    of wavenumbers.
+
+    For each wavenumber, a PINN is trained using a fixed sampling strategy and 
+    network architecture. The training process consists of an initial Adam phase 
+    followed by L-BFGS refinement. The predicted solution is then compared with 
+    the analytical solution to compute the relative L2 error.
+
+    The script also generates spatial visualizations of the PINN solution, 
+    exact solution, and error distribution for each wavenumber. Finally, all 
+    generated images are combined into a vertical figure for easy comparison.
+
+Inputs:
+    - Problem parameters: domain size, obstacle radius, and grid resolution.
+    - Wavenumber range (k values) for the parametric study.
+    - Sampling parameters: number of interior and boundary points.
+    - Neural network architecture: number of layers, neurons, and activation function.
+    - Training parameters: learning rates and number of iterations for Adam and L-BFGS.
+    - Analytical solution for error evaluation.
+
+Outputs:
+    - PNG figures (one per wavenumber) showing:
+        * PINN predicted solution
+        * Analytical solution
+        * Absolute error map
+      saved in ./figs_k/
+    - NumPy file (NPY) with PINN L2 errors vs wavenumber, 
+      saved in ./data/
+    - Combined vertical figure (PDF) with all wavenumber results, 
+      saved in ./figs_k/
 """
 
 #%% -------- IMPORTS --------
