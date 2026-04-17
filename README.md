@@ -9,7 +9,7 @@ This repository contains the scripts used to generate the figures presented in t
 ![graphical_abstract](figures/graphical_abstract.svg)
 
 ## Installation or required Python packages
-
+ 
 We recommend setting up a new Python environment with conda. You can do this by running the following commands:
 
 ```bash
@@ -54,7 +54,7 @@ make all
 ### Run individual sections
 
 Run the Section 1 **Analytical Solution**:
-
+ 
 ```bash
 make run_01_analytical_solution
 ```
