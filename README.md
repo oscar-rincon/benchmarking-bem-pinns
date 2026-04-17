@@ -6,6 +6,7 @@ This repository contains the scripts used to generate the figures presented in t
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18394518.svg)](https://doi.org/10.5281/zenodo.18394518)
 
+![graphical_abstract](figures/graphical_abstract.svg)
 
 ## Installation or required Python packages
 
