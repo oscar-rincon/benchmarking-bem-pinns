@@ -90,3 +90,20 @@ Approximated execution times of the scripts measured on GPU: NVIDIA GeForce RTX 
 - `04_generalization/`: ~ 1 minute
 
 **Total execution time:** ~ 9 hour and 50 minutes
+
+
+## Cite this work
+
+
+@article{cardeno_benchmarking_2026,\
+	title = {Benchmarking physics-informed neural networks and Boundary Element Method: Accuracy–efficiency trade-offs in wave scattering},\
+	volume = {188},\
+	issn = {0955-7997},\
+	shorttitle = {Benchmarking physics-informed neural networks and Boundary Element Method},\
+	doi = {10.1016/j.enganabound.2026.106786},\
+	journal = {Engineering Analysis with Boundary Elements},\
+	author = {Cardeño, Óscar Rincón and Pérez-Bernal, Gregorio and Montoya-Noguera, Silvana and Guarín-Zapata, Nicolás},\
+	month = jul,\
+	year = {2026},\
+	pages = {106786},\
+}
